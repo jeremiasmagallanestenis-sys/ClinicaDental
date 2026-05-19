@@ -100,19 +100,29 @@
       <div class="card odonto-card">
         <div class="odonto-leyenda" id="odonto-leyenda"></div>
 
-        <div class="odonto-jaw-label">Superior — Adulto</div>
-        <div class="odonto-row" id="row-adulto-sup"></div>
-
-        <div class="odonto-jaw-label" style="margin-top:16px">Inferior — Adulto</div>
-        <div class="odonto-row" id="row-adulto-inf"></div>
+        <div class="odonto-arch-label">Adulto</div>
+        <div class="odonto-arch-wrap">
+          <svg id="svg-adulto" class="odonto-arch-svg" viewBox="0 0 380 400" xmlns="http://www.w3.org/2000/svg">
+            <!-- arch outlines -->
+            <path id="arch-adulto-sup-outline" fill="none" stroke="#E2E8F0" stroke-width="18" stroke-linecap="round"/>
+            <path id="arch-adulto-inf-outline" fill="none" stroke="#E2E8F0" stroke-width="18" stroke-linecap="round"/>
+            <!-- midline -->
+            <line x1="190" y1="170" x2="190" y2="230" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4,3"/>
+            <line x1="60" y1="200" x2="320" y2="200" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4,3"/>
+          </svg>
+        </div>
 
         <div class="odonto-divider"></div>
 
-        <div class="odonto-jaw-label">Superior — Pediátrico</div>
-        <div class="odonto-row" id="row-ped-sup"></div>
-
-        <div class="odonto-jaw-label" style="margin-top:16px">Inferior — Pediátrico</div>
-        <div class="odonto-row" id="row-ped-inf"></div>
+        <div class="odonto-arch-label">Pediátrico</div>
+        <div class="odonto-arch-wrap">
+          <svg id="svg-ped" class="odonto-arch-svg odonto-arch-svg-ped" viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg">
+            <path id="arch-ped-sup-outline" fill="none" stroke="#E2E8F0" stroke-width="18" stroke-linecap="round"/>
+            <path id="arch-ped-inf-outline" fill="none" stroke="#E2E8F0" stroke-width="18" stroke-linecap="round"/>
+            <line x1="190" y1="130" x2="190" y2="190" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4,3"/>
+            <line x1="90" y1="160" x2="290" y2="160" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4,3"/>
+          </svg>
+        </div>
       </div>
     </section>
     <!-- ENFERMEDADES -->
@@ -282,32 +292,77 @@ const PED_INF    = [85,84,83,82,81,71,72,73,74,75];
 let estadoDientes = {};
 let odontoCargado = true;
 
-function renderFila(nums, containerId) {
-  const cont = document.getElementById(containerId);
-  cont.innerHTML = "";
-  nums.forEach(num => {
-    const est = estadoDientes[String(num)] || "normal";
+// ── SVG arch helpers ──────────────────────────────────────────
+const NS = 'http://www.w3.org/2000/svg';
+
+function ellipsePoint(cx, cy, rx, ry, angleDeg) {
+  const r = angleDeg * Math.PI / 180;
+  return { x: cx + rx * Math.cos(r), y: cy + ry * Math.sin(r) };
+}
+
+function archOutlinePath(cx, cy, rx, ry, a1, a2) {
+  const s = ellipsePoint(cx, cy, rx, ry, a1);
+  const e = ellipsePoint(cx, cy, rx, ry, a2);
+  const large = Math.abs(a2 - a1) > 180 ? 1 : 0;
+  return `M ${s.x.toFixed(1)},${s.y.toFixed(1)} A ${rx},${ry} 0 ${large},1 ${e.x.toFixed(1)},${e.y.toFixed(1)}`;
+}
+
+function renderArch(teeth, svgEl, cx, cy, rx, ry, a1, a2) {
+  svgEl.querySelectorAll('.tooth-g').forEach(el => el.remove());
+  const n = teeth.length;
+  teeth.forEach((num, i) => {
+    const αDeg = a1 + (a2 - a1) * i / (n - 1);
+    const { x, y } = ellipsePoint(cx, cy, rx, ry, αDeg);
+    const rotDeg = αDeg + 90;
+    const est = estadoDientes[String(num)] || 'normal';
     const col = COLORES[est];
-    const div = document.createElement("div");
-    div.className = "diente";
-    div.dataset.num = num;
-    div.style.cssText = `background:${col.bg};border-color:${col.border};color:${col.text}`;
-    div.innerHTML = `<div class="diente-num">${num}</div><div class="diente-sym">${SIMBOLOS[est]||""}</div>`;
-    div.addEventListener("click", () => {
-      const cur = estadoDientes[String(num)] || "normal";
-      const nxt = ESTADOS[(ESTADOS.indexOf(cur)+1) % ESTADOS.length];
-      estadoDientes[String(num)] = nxt;
-      const c = COLORES[nxt];
-      div.style.background = c.bg;
-      div.style.borderColor = c.border;
-      div.style.color = c.text;
-      div.querySelector(".diente-sym").textContent = SIMBOLOS[nxt]||"";
+    const sym = SIMBOLOS[est] || '';
+
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('tooth-g');
+    g.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rotDeg.toFixed(1)})`);
+    g.style.cursor = 'pointer';
+
+    const rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('x', -9); rect.setAttribute('y', -14);
+    rect.setAttribute('width', 18); rect.setAttribute('height', 28);
+    rect.setAttribute('rx', 4);
+    rect.setAttribute('fill', col.bg);
+    rect.setAttribute('stroke', col.border);
+    rect.setAttribute('stroke-width', 1.5);
+    g.appendChild(rect);
+
+    const mkT = (txt, dy, fs) => {
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('transform', `rotate(${(-rotDeg).toFixed(1)})`);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('dominant-baseline', 'middle');
+      t.setAttribute('y', dy);
+      t.setAttribute('font-size', fs);
+      t.setAttribute('font-weight', '700');
+      t.setAttribute('fill', col.text);
+      t.setAttribute('font-family', 'system-ui,sans-serif');
+      t.textContent = txt;
+      return t;
+    };
+    g.appendChild(mkT(num, sym ? -4 : 1, '7'));
+    if (sym) g.appendChild(mkT(sym, 8, '10'));
+
+    g.addEventListener('click', () => {
+      const cur = estadoDientes[String(num)] || 'normal';
+      estadoDientes[String(num)] = ESTADOS[(ESTADOS.indexOf(cur) + 1) % ESTADOS.length];
+      renderArch(teeth, svgEl, cx, cy, rx, ry, a1, a2);
     });
-    cont.appendChild(div);
+    svgEl.appendChild(g);
   });
 }
 
+// arch configs
+const ARCH_ADULTO = { cx:190, cy:195, rx:160, ry:150 };
+const ARCH_PED    = { cx:190, cy:155, rx:115, ry:110 };
+
 function cargarOdontograma() {
+  // leyenda
   const leyendaCont = document.getElementById("odonto-leyenda");
   leyendaCont.innerHTML = "";
   ESTADOS.forEach(est => {
@@ -318,14 +373,25 @@ function cargarOdontograma() {
     span.style.cssText = `background:${col.bg};border-color:${col.border};color:${col.text}`;
     leyendaCont.appendChild(span);
   });
+
+  // arch outline paths
+  const { cx: acx, cy: acy, rx: arx, ry: ary } = ARCH_ADULTO;
+  document.getElementById('arch-adulto-sup-outline').setAttribute('d', archOutlinePath(acx, acy, arx, ary, 213, 327));
+  document.getElementById('arch-adulto-inf-outline').setAttribute('d', archOutlinePath(acx, 205, arx, ary, 33, 147));
+  const { cx: pcx, cy: pcy, rx: prx, ry: pry } = ARCH_PED;
+  document.getElementById('arch-ped-sup-outline').setAttribute('d', archOutlinePath(pcx, pcy, prx, pry, 218, 322));
+  document.getElementById('arch-ped-inf-outline').setAttribute('d', archOutlinePath(pcx, 165, prx, pry, 38, 142));
+
   fetch(`/api/odontograma/${PACIENTE_ID}`)
-    .then(r=>r.json())
+    .then(r => r.json())
     .then(data => {
       estadoDientes = data || {};
-      renderFila(ADULTO_SUP, "row-adulto-sup");
-      renderFila(ADULTO_INF, "row-adulto-inf");
-      renderFila(PED_SUP,    "row-ped-sup");
-      renderFila(PED_INF,    "row-ped-inf");
+      const svgA = document.getElementById('svg-adulto');
+      const svgP = document.getElementById('svg-ped');
+      renderArch(ADULTO_SUP, svgA, acx, acy,       arx, ary, 213, 327);
+      renderArch(ADULTO_INF, svgA, acx, 205,        arx, ary, 33,  147);
+      renderArch(PED_SUP,    svgP, pcx, pcy,        prx, pry, 218, 322);
+      renderArch(PED_INF,    svgP, pcx, 165,        prx, pry, 38,  142);
       odontoCargado = true;
     });
 }

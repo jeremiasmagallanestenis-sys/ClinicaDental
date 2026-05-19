@@ -1242,6 +1242,15 @@ svg { width: 20px; height: 20px; flex-shrink: 0; }
 .odonto-jaw-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin: 4px 0 6px; }
 .odonto-divider { height: 1px; background: var(--border); margin: 16px 0; }
 
+/* Odontograma arco */
+.odonto-arch-label {
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px;
+}
+.odonto-arch-wrap { width: 100%; overflow-x: auto; }
+.odonto-arch-svg { width: 100%; max-width: 420px; display: block; margin: 0 auto; }
+.odonto-arch-svg-ped { max-width: 340px; }
+
 /* ── Ficha: tabs ─────────────────────────────────────────── */
 .ficha-tabs {
   display: flex; gap: 0; border-bottom: 2px solid var(--border);
