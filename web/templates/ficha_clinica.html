@@ -266,8 +266,6 @@ function switchTab(name) {
   document.querySelectorAll('.ficha-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).style.display = 'flex';
   document.querySelector(`.ficha-tab[onclick="switchTab('${name}')"]`).classList.add('active');
-  if (name === 'odontograma' && !odontoCargado) cargarOdontograma();
-  if (name === 'tratamientos' && !tratCargado) cargarTratamientos();
 }
 
 // ── Odontograma ───────────────────────────────────────────────
@@ -290,37 +288,36 @@ const PED_SUP    = [55,54,53,52,51,61,62,63,64,65];
 const PED_INF    = [85,84,83,82,81,71,72,73,74,75];
 
 let estadoDientes = {};
-let odontoCargado = true;
+let odontoCargado = false;
 
 // ── SVG arch helpers ──────────────────────────────────────────
 const NS = 'http://www.w3.org/2000/svg';
 
-function ellipsePoint(cx, cy, rx, ry, angleDeg) {
-  const r = angleDeg * Math.PI / 180;
+function ep(cx, cy, rx, ry, deg) {
+  const r = deg * Math.PI / 180;
   return { x: cx + rx * Math.cos(r), y: cy + ry * Math.sin(r) };
 }
 
-function archOutlinePath(cx, cy, rx, ry, a1, a2) {
-  const s = ellipsePoint(cx, cy, rx, ry, a1);
-  const e = ellipsePoint(cx, cy, rx, ry, a2);
-  const large = Math.abs(a2 - a1) > 180 ? 1 : 0;
-  return `M ${s.x.toFixed(1)},${s.y.toFixed(1)} A ${rx},${ry} 0 ${large},1 ${e.x.toFixed(1)},${e.y.toFixed(1)}`;
+function archPath(cx, cy, rx, ry, a1, a2) {
+  const s = ep(cx, cy, rx, ry, a1), e = ep(cx, cy, rx, ry, a2);
+  return `M${s.x.toFixed(1)},${s.y.toFixed(1)} A${rx},${ry} 0 0,1 ${e.x.toFixed(1)},${e.y.toFixed(1)}`;
 }
 
-function renderArch(teeth, svgEl, cx, cy, rx, ry, a1, a2) {
-  svgEl.querySelectorAll('.tooth-g').forEach(el => el.remove());
+// Each arch has a unique groupClass so re-render only removes its own teeth
+function renderArch(teeth, svgEl, cx, cy, rx, ry, a1, a2, groupClass) {
+  svgEl.querySelectorAll('.' + groupClass).forEach(el => el.remove());
   const n = teeth.length;
   teeth.forEach((num, i) => {
-    const αDeg = a1 + (a2 - a1) * i / (n - 1);
-    const { x, y } = ellipsePoint(cx, cy, rx, ry, αDeg);
-    const rotDeg = αDeg + 90;
+    const deg = a1 + (a2 - a1) * i / (n - 1);
+    const { x, y } = ep(cx, cy, rx, ry, deg);
+    const rot = deg + 90;
     const est = estadoDientes[String(num)] || 'normal';
     const col = COLORES[est];
     const sym = SIMBOLOS[est] || '';
 
     const g = document.createElementNS(NS, 'g');
-    g.classList.add('tooth-g');
-    g.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rotDeg.toFixed(1)})`);
+    g.classList.add(groupClass);
+    g.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(1)})`);
     g.style.cursor = 'pointer';
 
     const rect = document.createElementNS(NS, 'rect');
@@ -334,7 +331,7 @@ function renderArch(teeth, svgEl, cx, cy, rx, ry, a1, a2) {
 
     const mkT = (txt, dy, fs) => {
       const t = document.createElementNS(NS, 'text');
-      t.setAttribute('transform', `rotate(${(-rotDeg).toFixed(1)})`);
+      t.setAttribute('transform', `rotate(${(-rot).toFixed(1)})`);
       t.setAttribute('text-anchor', 'middle');
       t.setAttribute('dominant-baseline', 'middle');
       t.setAttribute('y', dy);
@@ -351,49 +348,57 @@ function renderArch(teeth, svgEl, cx, cy, rx, ry, a1, a2) {
     g.addEventListener('click', () => {
       const cur = estadoDientes[String(num)] || 'normal';
       estadoDientes[String(num)] = ESTADOS[(ESTADOS.indexOf(cur) + 1) % ESTADOS.length];
-      renderArch(teeth, svgEl, cx, cy, rx, ry, a1, a2);
+      renderArch(teeth, svgEl, cx, cy, rx, ry, a1, a2, groupClass);
     });
     svgEl.appendChild(g);
   });
 }
 
-// arch configs
-const ARCH_ADULTO = { cx:190, cy:195, rx:160, ry:150 };
-const ARCH_PED    = { cx:190, cy:155, rx:115, ry:110 };
-
 function cargarOdontograma() {
-  // leyenda
-  const leyendaCont = document.getElementById("odonto-leyenda");
-  leyendaCont.innerHTML = "";
-  ESTADOS.forEach(est => {
-    const col = COLORES[est];
-    const span = document.createElement("span");
-    span.className = "odonto-estado-pill";
-    span.textContent = LABELS[est];
-    span.style.cssText = `background:${col.bg};border-color:${col.border};color:${col.text}`;
-    leyendaCont.appendChild(span);
-  });
+  try {
+    // leyenda
+    const leyendaCont = document.getElementById("odonto-leyenda");
+    if (leyendaCont) {
+      leyendaCont.innerHTML = "";
+      ESTADOS.forEach(est => {
+        const col = COLORES[est];
+        const span = document.createElement("span");
+        span.className = "odonto-estado-pill";
+        span.textContent = LABELS[est];
+        span.style.cssText = `background:${col.bg};border-color:${col.border};color:${col.text}`;
+        leyendaCont.appendChild(span);
+      });
+    }
 
-  // arch outline paths
-  const { cx: acx, cy: acy, rx: arx, ry: ary } = ARCH_ADULTO;
-  document.getElementById('arch-adulto-sup-outline').setAttribute('d', archOutlinePath(acx, acy, arx, ary, 213, 327));
-  document.getElementById('arch-adulto-inf-outline').setAttribute('d', archOutlinePath(acx, 205, arx, ary, 33, 147));
-  const { cx: pcx, cy: pcy, rx: prx, ry: pry } = ARCH_PED;
-  document.getElementById('arch-ped-sup-outline').setAttribute('d', archOutlinePath(pcx, pcy, prx, pry, 218, 322));
-  document.getElementById('arch-ped-inf-outline').setAttribute('d', archOutlinePath(pcx, 165, prx, pry, 38, 142));
+    // arch outlines
+    const setPath = (id, ...args) => {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('d', archPath(...args));
+    };
+    setPath('arch-adulto-sup-outline', 190, 195, 160, 150, 213, 327);
+    setPath('arch-adulto-inf-outline', 190, 205, 160, 150,  33, 147);
+    setPath('arch-ped-sup-outline',    190, 155, 115, 110, 218, 322);
+    setPath('arch-ped-inf-outline',    190, 165, 115, 110,  38, 142);
 
-  fetch(`/api/odontograma/${PACIENTE_ID}`)
-    .then(r => r.json())
-    .then(data => {
-      estadoDientes = data || {};
-      const svgA = document.getElementById('svg-adulto');
-      const svgP = document.getElementById('svg-ped');
-      renderArch(ADULTO_SUP, svgA, acx, acy,       arx, ary, 213, 327);
-      renderArch(ADULTO_INF, svgA, acx, 205,        arx, ary, 33,  147);
-      renderArch(PED_SUP,    svgP, pcx, pcy,        prx, pry, 218, 322);
-      renderArch(PED_INF,    svgP, pcx, 165,        prx, pry, 38,  142);
-      odontoCargado = true;
-    });
+    fetch(`/api/odontograma/${PACIENTE_ID}`)
+      .then(r => r.json())
+      .then(data => {
+        estadoDientes = data || {};
+        const svgA = document.getElementById('svg-adulto');
+        const svgP = document.getElementById('svg-ped');
+        if (svgA) {
+          renderArch(ADULTO_SUP, svgA, 190, 195, 160, 150, 213, 327, 'arch-asup');
+          renderArch(ADULTO_INF, svgA, 190, 205, 160, 150,  33, 147, 'arch-ainf');
+        }
+        if (svgP) {
+          renderArch(PED_SUP, svgP, 190, 155, 115, 110, 218, 322, 'arch-psup');
+          renderArch(PED_INF, svgP, 190, 165, 115, 110,  38, 142, 'arch-pinf');
+        }
+        odontoCargado = true;
+      });
+  } catch(e) {
+    console.error('Error cargando odontograma:', e);
+  }
 }
 
 cargarOdontograma();
@@ -533,12 +538,18 @@ function renderTrat() {
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 async function cargarTratamientos() {
-  const r = await fetch(`/api/pagos/${PACIENTE_ID}`);
-  pagos = await r.json();
-  renderTrat();
-  tratCargado = true;
-  cargarObsRows();
+  try {
+    const r = await fetch(`/api/pagos/${PACIENTE_ID}`);
+    pagos = await r.json();
+    renderTrat();
+    tratCargado = true;
+    cargarObsRows();
+  } catch(e) {
+    console.error('Error cargando tratamientos:', e);
+  }
 }
+
+cargarTratamientos();
 
 async function agregarFila() {
   const r = await fetch(`/api/pagos/${PACIENTE_ID}`, { method:'POST' });
