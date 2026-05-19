@@ -1241,3 +1241,91 @@ svg { width: 20px; height: 20px; flex-shrink: 0; }
 .odonto-card { padding: 16px; }
 .odonto-jaw-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin: 4px 0 6px; }
 .odonto-divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ── Ficha: tabs ─────────────────────────────────────────── */
+.ficha-tabs {
+  display: flex; gap: 0; border-bottom: 2px solid var(--border);
+  margin-bottom: 20px; overflow-x: auto;
+}
+.ficha-tab {
+  flex: 1; padding: 10px 8px; font-size: 13px; font-weight: 700;
+  letter-spacing: .05em; color: var(--text-muted);
+  background: none; border: none; border-bottom: 3px solid transparent;
+  cursor: pointer; white-space: nowrap; transition: color .15s, border-color .15s;
+  margin-bottom: -2px;
+}
+.ficha-tab:hover { color: var(--text); }
+.ficha-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.ficha-tab-panel { display: flex; flex-direction: column; gap: 20px; }
+
+/* static display field */
+.form-static {
+  padding: 8px 12px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 14px; color: var(--text); min-height: 38px;
+}
+
+/* datos grid */
+.datos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (max-width: 480px) { .datos-grid { grid-template-columns: 1fr; } }
+
+/* ── Tratamientos table ───────────────────────────────────── */
+.trat-table-wrap { padding: 0; overflow: hidden; }
+.trat-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.trat-th {
+  background: var(--bg); color: var(--text-muted);
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  padding: 10px 10px; border-bottom: 2px solid var(--border); text-align: left;
+}
+.trat-td { padding: 4px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.trat-row:last-child .trat-td { border-bottom: none; }
+.trat-row:hover { background: var(--row-hover); }
+
+.trat-col-fecha { width: 130px; min-width: 110px; }
+.trat-col-trat  { min-width: 120px; }
+.trat-col-num   { width: 90px; min-width: 70px; text-align: right; }
+.trat-col-del   { width: 32px; }
+
+.trat-input {
+  width: 100%; padding: 5px 6px; font-size: 13px; color: var(--text);
+  border: 1px solid transparent; border-radius: 6px; background: transparent;
+  outline: none; transition: border-color .15s, background .15s;
+}
+.trat-input:focus { border-color: var(--primary); background: #fff; }
+.trat-input-num { text-align: right; }
+
+.trat-saldo { font-weight: 700; color: var(--success); padding-right: 10px; }
+.trat-saldo-pend { color: var(--danger); }
+
+.trat-del-btn {
+  background: none; border: none; cursor: pointer; color: var(--text-faint);
+  font-size: 13px; padding: 4px 6px; border-radius: 4px;
+  transition: color .15s, background .15s;
+}
+.trat-del-btn:hover { color: var(--danger); background: var(--danger-bg); }
+
+.trat-add-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-top: 1px solid var(--border); gap: 12px; flex-wrap: wrap;
+}
+.trat-totales { font-size: 13px; color: var(--text-secondary); }
+
+.trat-loading { text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
+.trat-empty { color: var(--text-faint); }
+
+/* ── Observaciones table ─────────────────────────────────── */
+.obs-table-wrap { padding: 0; overflow: hidden; }
+.obs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.obs-th {
+  background: var(--bg); color: var(--text-muted);
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  padding: 10px 10px; border-bottom: 2px solid var(--border); text-align: left;
+}
+.obs-td { padding: 4px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.obs-row:last-child .obs-td { border-bottom: none; }
+.obs-row:hover { background: var(--row-hover); }
+.obs-col-fecha { width: 130px; min-width: 110px; }
+.obs-col-text  { min-width: 160px; }
+.obs-col-del   { width: 32px; }
