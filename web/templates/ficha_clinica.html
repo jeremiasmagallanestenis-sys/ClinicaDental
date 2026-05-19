@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Ficha Clínica — {{ paciente.nombre }}{% endblock %}
+{% block topbar_title %}Ficha Clínica{% endblock %}
+
+{% block topbar_actions %}
+<a href="/pacientes/{{ paciente.id }}" class="btn-icon" title="Volver">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="ficha-page">
+
+  <!-- Paciente -->
+  <div class="ficha-patient-bar card">
+    <div class="hero-avatar avatar-{{ loop.index0 % 8 if loop is defined else 0 }}" style="width:40px;height:40px;font-size:14px;min-width:40px;">
+      {{ paciente.nombre.split()[0][0] }}{% if paciente.nombre.split()|length > 1 %}{{ paciente.nombre.split()[-1][0] }}{% endif %}
+    </div>
+    <div>
+      <div class="ficha-patient-name">{{ paciente.nombre }}</div>
+      <div class="ficha-patient-meta">DNI {{ paciente.dni }}</div>
+    </div>
+  </div>
+
+  <!-- Nueva consulta -->
+  <section class="ficha-section">
+    <h2 class="section-title">Nueva Consulta</h2>
+    <form method="POST" class="ficha-form card">
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input type="date" name="fecha" class="form-input"
+               value="{{ today }}" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Motivo de la consulta *</label>
+        <input type="text" name="motivo" class="form-input"
+               placeholder="Ej: Dolor molar, Control, Limpieza…" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Diagnóstico</label>
+        <textarea name="diagnostico" class="form-input form-textarea"
+                  placeholder="Diagnóstico clínico…" rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tratamiento</label>
+        <textarea name="tratamiento" class="form-input form-textarea"
+                  placeholder="Tratamiento realizado o indicado…" rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Observaciones</label>
+        <textarea name="observaciones" class="form-input form-textarea"
+                  placeholder="Notas adicionales…" rows="3"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <a href="/pacientes/{{ paciente.id }}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar consulta</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Historial previo -->
+  {% if historial %}
+  <section class="ficha-section">
+    <h2 class="section-title">Consultas anteriores</h2>
+    <div class="timeline">
+      {% for c in historial %}
+      <div class="timeline-item card">
+        <div class="timeline-date">{{ c.fecha }}</div>
+        <div class="timeline-body">
+          <div class="timeline-motivo">{{ c.motivo }}</div>
+          {% if c.diagnostico %}
+          <div class="timeline-field"><strong>Diagnóstico:</strong> {{ c.diagnostico }}</div>
+          {% endif %}
+          {% if c.tratamiento %}
+          <div class="timeline-field"><strong>Tratamiento:</strong> {{ c.tratamiento }}</div>
+          {% endif %}
+          {% if c.observaciones %}
+          <div class="timeline-field"><strong>Observaciones:</strong> {{ c.observaciones }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}

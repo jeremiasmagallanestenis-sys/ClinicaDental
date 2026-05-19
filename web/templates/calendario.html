@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}Calendario — Clínica Dental{% endblock %}
+{% block topbar_title %}Calendario{% endblock %}
+
+{% block content %}
+<div class="page-calendario">
+  <!-- View toggle + nav -->
+  <div class="cal-toolbar">
+    <div class="view-toggle">
+      <button class="toggle-btn active" id="btnSemana" onclick="switchView('semana')">Semana</button>
+      <button class="toggle-btn" id="btnMes" onclick="switchView('mes')">Mes</button>
+    </div>
+    <div class="cal-nav">
+      <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">&#8592;</button>
+      <span class="cal-label" id="calLabel">—</span>
+      <button class="nav-btn" id="nextBtn" onclick="navigate(1)">&#8594;</button>
+    </div>
+  </div>
+
+  <!-- Weekly view -->
+  <div id="weekView" class="week-view">
+    <div class="week-grid" id="weekGrid">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <!-- Monthly view -->
+  <div id="monthView" class="month-view" style="display:none">
+    <div class="month-header-row">
+      <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div>
+      <div>Vie</div><div>Sáb</div><div>Dom</div>
+    </div>
+    <div class="month-grid" id="monthGrid">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openNewCita()" title="Nueva cita">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <line x1="12" y1="5" x2="12" y2="19"/>
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
+
+<!-- Appointment Modal -->
+<div class="modal-overlay" id="citaModal" style="display:none">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="modalTitle">Nueva Cita</h3>
+      <button class="modal-close" onclick="closeCitaModal()">✕</button>
+    </div>
+    <form id="citaForm" class="modal-form">
+      <input type="hidden" id="editCitaId" />
+
+      <div class="form-group">
+        <label class="form-label">Paciente *</label>
+        <select id="modalPacienteId" class="form-input" required>
+          <option value="">Seleccionar paciente…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha *</label>
+        <input type="date" id="modalFecha" class="form-input" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hora *</label>
+        <input type="time" id="modalHora" class="form-input" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Motivo</label>
+        <input type="text" id="modalMotivo" class="form-input" placeholder="Ej: Revisión, Limpieza…" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="btnDelete" style="display:none" onclick="deleteCita()">Eliminar</button>
+        <button type="button" class="btn btn-secondary" onclick="closeCitaModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── State ──────────────────────────────────────────────
+let currentView = 'semana';
+let currentDate = new Date();
+currentDate.setHours(0,0,0,0);
+
+// ── View switching ─────────────────────────────────────
+function switchView(view) {
+  currentView = view;
+  document.getElementById('weekView').style.display = view === 'semana' ? '' : 'none';
+  document.getElementById('monthView').style.display = view === 'mes' ? '' : 'none';
+  document.getElementById('btnSemana').classList.toggle('active', view === 'semana');
+  document.getElementById('btnMes').classList.toggle('active', view === 'mes');
+  renderCalendar();
+}
+
+function navigate(dir) {
+  if (currentView === 'semana') {
+    currentDate.setDate(currentDate.getDate() + dir * 7);
+  } else {
+    currentDate.setMonth(currentDate.getMonth() + dir);
+  }
+  renderCalendar();
+}
+
+// ── Helpers ────────────────────────────────────────────
+function isoDate(d) {
+  return d.toISOString().split('T')[0];
+}
+
+function getMondayOf(d) {
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  const m = new Date(d);
+  m.setDate(m.getDate() + diff);
+  return m;
+}
+
+const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const COLORS = [
+  'pill-blue','pill-green','pill-yellow','pill-pink','pill-indigo','pill-orange'
+];
+
+// ── Render calendar ────────────────────────────────────
+async function renderCalendar() {
+  if (currentView === 'semana') {
+    await renderWeek();
+  } else {
+    await renderMonth();
+  }
+}
+
+async function renderWeek() {
+  const lunes = getMondayOf(currentDate);
+  const label = `${lunes.getDate()} ${MESES[lunes.getMonth()]} — ${new Date(lunes.getTime()+6*86400000).getDate()} ${MESES[new Date(lunes.getTime()+6*86400000).getMonth()]} ${lunes.getFullYear()}`;
+  document.getElementById('calLabel').textContent = label;
+
+  const res = await fetch(`/api/citas_semana?fecha=${isoDate(lunes)}`);
+  const citas = await res.json();
+
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = '';
+
+  // Time column
+  const timeCol = document.createElement('div');
+  timeCol.className = 'time-col';
+  timeCol.innerHTML = '<div class="time-col-header"></div>';
+  for (let h = 7; h <= 21; h++) {
+    const slot = document.createElement('div');
+    slot.className = 'time-slot';
+    slot.textContent = `${h}:00`;
+    timeCol.appendChild(slot);
+  }
+  grid.appendChild(timeCol);
+
+  // Day columns
+  for (let d = 0; d < 7; d++) {
+    const dayDate = new Date(lunes.getTime() + d * 86400000);
+    const dayStr = isoDate(dayDate);
+    const isToday = dayStr === isoDate(new Date());
+
+    const col = document.createElement('div');
+    col.className = 'day-col' + (isToday ? ' today' : '');
+
+    const hdr = document.createElement('div');
+    hdr.className = 'day-col-header';
+    hdr.innerHTML = `<span class="day-name">${DIAS[d]}</span><span class="day-num${isToday ? ' today-num' : ''}">${dayDate.getDate()}</span>`;
+    col.appendChild(hdr);
+
+    const body = document.createElement('div');
+    body.className = 'day-body';
+    // Time slots
+    for (let h = 7; h <= 21; h++) {
+      const slot = document.createElement('div');
+      slot.className = 'hour-slot';
+      slot.dataset.date = dayStr;
+      slot.dataset.hour = h;
+      slot.addEventListener('click', () => {
+        openNewCita(dayStr, `${String(h).padStart(2,'0')}:00`);
+      });
+      body.appendChild(slot);
+    }
+    // Appointments
+    const dayCitas = citas.filter(c => c.fecha === dayStr);
+    dayCitas.forEach((cita, i) => {
+      const pill = createPill(cita, i);
+      // Position by time
+      const [hh, mm] = cita.hora.split(':').map(Number);
+      const top = ((hh - 7) * 60 + mm) / 15 * 15; // px per 15min slot
+      pill.style.top = `${top}px`;
+      pill.style.position = 'absolute';
+      body.style.position = 'relative';
+      body.appendChild(pill);
+    });
+
+    col.appendChild(body);
+    grid.appendChild(col);
+  }
+}
+
+function createPill(cita, colorIdx) {
+  const pill = document.createElement('div');
+  pill.className = `cita-pill ${COLORS[colorIdx % COLORS.length]}`;
+  pill.innerHTML = `<strong>${cita.hora}</strong> ${cita.paciente_nombre}<br><small>${cita.motivo}</small>`;
+  pill.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openEditCita(cita);
+  });
+  return pill;
+}
+
+async function renderMonth() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  document.getElementById('calLabel').textContent = `${MESES[month]} ${year}`;
+
+  const res = await fetch(`/api/citas_mes?year=${year}&month=${month+1}`);
+  const citas = await res.json();
+
+  const grid = document.getElementById('monthGrid');
+  grid.innerHTML = '';
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  // Monday-based: 0=Mon...6=Sun
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const totalDays = lastDay.getDate();
+
+  // Blank cells before
+  for (let i = 0; i < startOffset; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'month-cell empty';
+    grid.appendChild(cell);
+  }
+
+  // Day cells
+  for (let day = 1; day <= totalDays; day++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const isToday = dateStr === isoDate(new Date());
+    const cell = document.createElement('div');
+    cell.className = 'month-cell' + (isToday ? ' today' : '');
+
+    const numEl = document.createElement('div');
+    numEl.className = 'month-day-num';
+    numEl.textContent = day;
+    cell.appendChild(numEl);
+
+    const dayCitas = citas.filter(c => c.fecha === dateStr);
+    dayCitas.slice(0, 3).forEach((cita, i) => {
+      const dot = document.createElement('div');
+      dot.className = `month-pill ${COLORS[i % COLORS.length]}`;
+      dot.textContent = `${cita.hora} ${cita.paciente_nombre}`;
+      dot.addEventListener('click', (e) => { e.stopPropagation(); openEditCita(cita); });
+      cell.appendChild(dot);
+    });
+    if (dayCitas.length > 3) {
+      const more = document.createElement('div');
+      more.className = 'month-more';
+      more.textContent = `+${dayCitas.length - 3} más`;
+      cell.appendChild(more);
+    }
+
+    cell.addEventListener('click', () => openNewCita(dateStr));
+    grid.appendChild(cell);
+  }
+}
+
+// ── Modal ──────────────────────────────────────────────
+let pacientesCache = [];
+
+async function loadPacientes() {
+  if (pacientesCache.length > 0) return;
+  const res = await fetch('/api/pacientes');
+  pacientesCache = await res.json();
+}
+
+async function openNewCita(fecha, hora) {
+  await loadPacientes();
+  document.getElementById('modalTitle').textContent = 'Nueva Cita';
+  document.getElementById('editCitaId').value = '';
+  document.getElementById('btnDelete').style.display = 'none';
+  fillPacienteSelect(null);
+  document.getElementById('modalFecha').value = fecha || isoDate(new Date());
+  document.getElementById('modalHora').value = hora || '09:00';
+  document.getElementById('modalMotivo').value = '';
+  document.getElementById('citaModal').style.display = 'flex';
+}
+
+async function openEditCita(cita) {
+  await loadPacientes();
+  document.getElementById('modalTitle').textContent = 'Editar Cita';
+  document.getElementById('editCitaId').value = cita.id;
+  document.getElementById('btnDelete').style.display = '';
+  fillPacienteSelect(cita.paciente_id);
+  document.getElementById('modalFecha').value = cita.fecha;
+  document.getElementById('modalHora').value = cita.hora;
+  document.getElementById('modalMotivo').value = cita.motivo;
+  document.getElementById('citaModal').style.display = 'flex';
+}
+
+function fillPacienteSelect(selectedId) {
+  const sel = document.getElementById('modalPacienteId');
+  sel.innerHTML = '<option value="">Seleccionar paciente…</option>';
+  pacientesCache.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = `${p.nombre} (${p.dni})`;
+    if (p.id === selectedId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function closeCitaModal() {
+  document.getElementById('citaModal').style.display = 'none';
+}
+
+document.getElementById('citaModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeCitaModal();
+});
+
+document.getElementById('citaForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('editCitaId').value;
+  const body = {
+    paciente_id: document.getElementById('modalPacienteId').value,
+    fecha: document.getElementById('modalFecha').value,
+    hora: document.getElementById('modalHora').value,
+    motivo: document.getElementById('modalMotivo').value,
+  };
+  if (!body.paciente_id) { alert('Selecciona un paciente'); return; }
+
+  const url = id ? `/api/citas/${id}` : '/api/citas';
+  const method = id ? 'PUT' : 'POST';
+  const res = await fetch(url, {
+    method,
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    closeCitaModal();
+    renderCalendar();
+  } else {
+    alert('Error al guardar la cita');
+  }
+});
+
+async function deleteCita() {
+  const id = document.getElementById('editCitaId').value;
+  if (!id || !confirm('¿Eliminar esta cita?')) return;
+  const res = await fetch(`/api/citas/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    closeCitaModal();
+    renderCalendar();
+  } else {
+    alert('Error al eliminar la cita');
+  }
+}
+
+// ── Init ───────────────────────────────────────────────
+renderCalendar();
+</script>
+{% endblock %}

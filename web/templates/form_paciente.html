@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} — Clínica Dental{% endblock %}
+{% block topbar_title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('ver_paciente', id=paciente.id) if paciente else url_for('pacientes') }}" class="btn-icon" title="Volver">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-form">
+  <div class="card form-card">
+    <form method="POST" class="patient-form" autocomplete="off">
+      <div class="form-group">
+        <label class="form-label" for="nombre">Nombre completo *</label>
+        <input
+          type="text"
+          id="nombre"
+          name="nombre"
+          class="form-input"
+          value="{{ paciente.nombre if paciente else '' }}"
+          required
+          placeholder="Ej: Juan García López"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="dni">DNI / Documento *</label>
+        <input
+          type="text"
+          id="dni"
+          name="dni"
+          class="form-input"
+          value="{{ paciente.dni if paciente else '' }}"
+          required
+          placeholder="Ej: 12345678A"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="fecha_nacimiento">Fecha de nacimiento *</label>
+        <input
+          type="date"
+          id="fecha_nacimiento"
+          name="fecha_nacimiento"
+          class="form-input"
+          value="{{ paciente.fecha_nacimiento if paciente else '' }}"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="telefono">Teléfono</label>
+        <input
+          type="tel"
+          id="telefono"
+          name="telefono"
+          class="form-input"
+          value="{{ paciente.telefono if paciente else '' }}"
+          placeholder="Ej: +34 600 000 000"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="notas">Notas / Observaciones</label>
+        <textarea
+          id="notas"
+          name="notas"
+          class="form-input form-textarea"
+          rows="4"
+          placeholder="Alergias, condiciones médicas relevantes…"
+        >{{ paciente.notas if paciente else '' }}</textarea>
+      </div>
+
+      <div class="form-actions">
+        <a href="{{ url_for('ver_paciente', id=paciente.id) if paciente else url_for('pacientes') }}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">
+          {% if paciente %}Guardar cambios{% else %}Crear paciente{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

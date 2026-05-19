@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Pacientes — Clínica Dental{% endblock %}
+{% block topbar_title %}Pacientes{% endblock %}
+
+{% block content %}
+<div class="page-pacientes">
+  <!-- Search bar -->
+  <div class="search-wrapper">
+    <div class="search-box">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        id="searchInput"
+        placeholder="Buscar por nombre o DNI…"
+        value="{{ q }}"
+        autocomplete="off"
+      />
+      {% if q %}
+      <a href="/pacientes" class="search-clear">✕</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Patient list -->
+  <div class="patient-list" id="patientList">
+    {% if pacientes %}
+      {% for p in pacientes %}
+      <a href="/pacientes/{{ p.id }}" class="patient-row" data-nombre="{{ p.nombre|lower }}" data-dni="{{ p.dni }}">
+        <div class="avatar avatar-{{ loop.index0 % 8 }}">
+          {{ p.nombre.split()[0][0] }}{% if p.nombre.split()|length > 1 %}{{ p.nombre.split()[-1][0] }}{% endif %}
+        </div>
+        <div class="patient-info">
+          <div class="patient-name">{{ p.nombre }}</div>
+          <div class="patient-sub">DNI: {{ p.dni }}{% if p.telefono %} · {{ p.telefono }}{% endif %}</div>
+        </div>
+        <svg class="patient-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+        </svg>
+        <p>{% if q %}No se encontraron pacientes para "{{ q }}"{% else %}No hay pacientes registrados{% endif %}</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- FAB -->
+<a href="/pacientes/nuevo" class="fab" title="Nuevo paciente">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <line x1="12" y1="5" x2="12" y2="19"/>
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</a>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Client-side search filter
+  const searchInput = document.getElementById('searchInput');
+  const rows = document.querySelectorAll('.patient-row');
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.toLowerCase().trim();
+    rows.forEach(row => {
+      const nombre = row.dataset.nombre || '';
+      const dni = row.dataset.dni || '';
+      row.style.display = (!q || nombre.includes(q) || dni.includes(q)) ? '' : 'none';
+    });
+  });
+</script>
+{% endblock %}

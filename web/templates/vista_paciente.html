@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ paciente.nombre }} — Clínica Dental{% endblock %}
+{% block topbar_title %}Ficha del Paciente{% endblock %}
+
+{% block topbar_actions %}
+<a href="/pacientes" class="btn-icon" title="Volver">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-patient-detail">
+
+  <!-- Hero card -->
+  <div class="patient-hero card">
+    <div class="hero-avatar avatar-0">
+      {{ paciente.nombre.split()[0][0] }}{% if paciente.nombre.split()|length > 1 %}{{ paciente.nombre.split()[-1][0] }}{% endif %}
+    </div>
+    <div class="hero-info">
+      <h1 class="hero-name">{{ paciente.nombre }}</h1>
+      <div class="hero-meta">
+        <span><strong>DNI:</strong> {{ paciente.dni }}</span>
+        {% if paciente.telefono %}<span><strong>Tel:</strong> {{ paciente.telefono }}</span>{% endif %}
+        {% if paciente.fecha_nacimiento %}<span><strong>Nac:</strong> {{ paciente.fecha_nacimiento }}</span>{% endif %}
+      </div>
+      {% if paciente.notas %}
+      <div class="hero-notes">{{ paciente.notas }}</div>
+      {% endif %}
+    </div>
+    <div class="hero-actions">
+      <a href="/pacientes/{{ paciente.id }}/editar" class="btn btn-secondary">Editar</a>
+      <button class="btn btn-ghost" onclick="openNewCitaModal({{ paciente.id }}, '{{ paciente.nombre }}')">📅 Agendar</button>
+      <a href="/pacientes/{{ paciente.id }}/ficha" class="btn btn-primary">📋 Ficha clínica</a>
+    </div>
+  </div>
+
+  <!-- Consultation history -->
+  <section class="history-section">
+    <h2 class="section-title">Historial de Consultas</h2>
+
+    {% if historial %}
+    <div class="timeline">
+      {% for c in historial %}
+      <div class="timeline-item card">
+        <div class="timeline-date">{{ c.fecha }}</div>
+        <div class="timeline-body">
+          <div class="timeline-motivo"><strong>Motivo:</strong> {{ c.motivo }}</div>
+          {% if c.diagnostico %}<div class="timeline-field"><strong>Diagnóstico:</strong> {{ c.diagnostico }}</div>{% endif %}
+          {% if c.tratamiento %}<div class="timeline-field"><strong>Tratamiento:</strong> {{ c.tratamiento }}</div>{% endif %}
+          {% if c.observaciones %}<div class="timeline-field"><strong>Observaciones:</strong> {{ c.observaciones }}</div>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+        <rect x="9" y="3" width="6" height="4" rx="1"/>
+      </svg>
+      <p>Sin consultas registradas</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+
+<!-- Appointment modal -->
+<div class="modal-overlay" id="citaModal" style="display:none">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Nueva Cita</h3>
+      <button class="modal-close" onclick="closeCitaModal()">✕</button>
+    </div>
+    <form id="citaForm" class="modal-form">
+      <input type="hidden" id="modalPacienteId" />
+      <div class="form-group">
+        <label>Paciente</label>
+        <input type="text" id="modalPacienteNombre" class="form-input" readonly />
+      </div>
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="modalFecha" class="form-input" required />
+      </div>
+      <div class="form-group">
+        <label>Hora</label>
+        <input type="time" id="modalHora" class="form-input" required />
+      </div>
+      <div class="form-group">
+        <label>Motivo</label>
+        <input type="text" id="modalMotivo" class="form-input" placeholder="Motivo de la consulta" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeCitaModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openNewCitaModal(pacienteId, nombre) {
+  document.getElementById('modalPacienteId').value = pacienteId;
+  document.getElementById('modalPacienteNombre').value = nombre;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('modalFecha').value = today;
+  document.getElementById('modalHora').value = '09:00';
+  document.getElementById('modalMotivo').value = '';
+  document.getElementById('citaModal').style.display = 'flex';
+}
+
+function closeCitaModal() {
+  document.getElementById('citaModal').style.display = 'none';
+}
+
+document.getElementById('citaForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    paciente_id: document.getElementById('modalPacienteId').value,
+    fecha: document.getElementById('modalFecha').value,
+    hora: document.getElementById('modalHora').value,
+    motivo: document.getElementById('modalMotivo').value,
+  };
+  const res = await fetch('/api/citas', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    closeCitaModal();
+    alert('Cita agendada correctamente');
+  } else {
+    alert('Error al agendar la cita');
+  }
+});
+
+document.getElementById('citaModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeCitaModal();
+});
+</script>
+{% endblock %}
