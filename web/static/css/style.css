@@ -661,47 +661,51 @@ svg { width: 20px; height: 20px; flex-shrink: 0; }
   color: var(--text);
   margin-bottom: 12px;
 }
-.timeline { display: flex; flex-direction: column; gap: 10px; }
+.timeline { display: flex; flex-direction: column; gap: 14px; }
 
-.timeline-item { padding: 20px 24px; }
-.timeline-header { display: flex; align-items: center; gap: 14px; margin-bottom: 0; }
+.timeline-item {
+  padding: 20px 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.timeline-header {
+  display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+}
 .timeline-date-badge {
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
+  padding: 5px 14px;
   background: var(--primary);
   color: #fff;
-  border-radius: var(--radius-pill);
-  font-size: 11px;
+  border-radius: 999px;
+  font-size: 12px;
   font-weight: 700;
   flex-shrink: 0;
+  letter-spacing: .01em;
 }
-.timeline-motivo { font-size: 16px; font-weight: 700; color: var(--text); }
+.timeline-motivo {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  padding-top: 2px; flex: 1; min-width: 0;
+}
 .timeline-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .timeline-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  background: #FEF3C7;
-  color: #92400E;
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 6px;
+  font-size: 11px; font-weight: 600;
+  background: #FEF3C7; color: #92400E;
 }
-.timeline-sep { height: 1px; background: var(--border); margin: 10px 0 8px; }
-.timeline-fields { display: flex; flex-direction: column; gap: 6px; }
-.timeline-field-row { display: flex; gap: 0; }
+.timeline-sep { height: 1px; background: var(--border); margin: 14px 0 12px; }
+.timeline-fields { display: flex; flex-direction: column; gap: 10px; }
+.timeline-field-row {
+  display: flex; flex-direction: column; gap: 3px;
+}
 .timeline-field-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-faint);
-  width: 110px;
-  flex-shrink: 0;
-  padding-top: 1px;
-  text-transform: uppercase;
-  letter-spacing: .03em;
+  font-size: 10px; font-weight: 700; color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: .05em;
 }
-.timeline-field-val { font-size: 13px; color: var(--text-secondary); }
+.timeline-field-val {
+  font-size: 14px; color: var(--text-secondary); line-height: 1.5;
+}
 
 /* ── Calendar page ──────────────────────────────────────── */
 .page-calendario { display: flex; flex-direction: column; gap: 0; }
@@ -1147,7 +1151,18 @@ svg { width: 20px; height: 20px; flex-shrink: 0; }
   .page-body { padding: 0 16px; }
   .detail-content { padding: 16px; }
   .detail-topbar { padding: 0 16px; }
-  .ficha-page { padding: 16px; }
+  .ficha-page { padding: 12px; gap: 20px; }
+  .ficha-form { padding: 16px; gap: 14px; }
+  .timeline { gap: 12px; }
+  .timeline-item { padding: 16px; }
+  .timeline-field-row { flex-direction: column; gap: 2px; }
+  .timeline-field-label { width: auto; }
+  .sino-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .sino-opts { gap: 20px; }
+  .enf-grid { grid-template-columns: repeat(2, 1fr); }
+  .firma-row { flex-direction: column; }
+  .ficha-patient-bar { padding: 12px 14px; gap: 12px; }
+  .ficha-section-title { font-size: 11px; margin-bottom: 6px; }
   .cal-toolbar { padding: 0 16px; flex-wrap: wrap; height: auto; padding-top: 8px; padding-bottom: 8px; gap: 8px; }
   .agenda-strip { padding: 12px 16px; }
   .agenda-strip-inner { flex-direction: column; gap: 8px; align-items: flex-start; }
