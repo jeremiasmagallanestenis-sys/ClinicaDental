@@ -95,6 +95,17 @@ def ficha_clinica(id):
                            historial=historial, today=date.today().isoformat())
 
 
+@app.route("/api/odontograma/<int:id>")
+def api_get_odontograma(id):
+    datos = db.obtener_odontograma(id)
+    return jsonify(datos)
+
+@app.route("/api/odontograma/<int:id>", methods=["POST"])
+def api_guardar_odontograma(id):
+    datos = request.get_json(force=True)
+    db.guardar_odontograma(id, datos)
+    return jsonify({"ok": True})
+
 @app.route("/calendario")
 def calendario():
     return render_template("calendario.html")

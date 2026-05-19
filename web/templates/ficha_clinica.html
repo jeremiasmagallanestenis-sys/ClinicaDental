@@ -15,7 +15,7 @@
 
   <!-- Paciente -->
   <div class="ficha-patient-bar card">
-    <div class="hero-avatar avatar-{{ loop.index0 % 8 if loop is defined else 0 }}" style="width:40px;height:40px;font-size:14px;min-width:40px;">
+    <div class="hero-avatar avatar-0" style="width:40px;height:40px;font-size:14px;min-width:40px;">
       {{ paciente.nombre.split()[0][0] }}{% if paciente.nombre.split()|length > 1 %}{{ paciente.nombre.split()[-1][0] }}{% endif %}
     </div>
     <div>
@@ -24,40 +24,69 @@
     </div>
   </div>
 
+  <!-- Odontograma -->
+  <section class="ficha-section">
+    <div class="section-header">
+      <h2 class="section-title">Odontograma</h2>
+      <button class="btn btn-primary btn-sm" id="btnGuardarOdonto" onclick="guardarOdontograma()">Guardar</button>
+    </div>
+
+    <!-- Leyenda -->
+    <div class="odonto-leyenda">
+      <span class="odonto-estado-pill" data-estado="normal">Sano</span>
+      <span class="odonto-estado-pill" data-estado="caries">Caries</span>
+      <span class="odonto-estado-pill" data-estado="extraccion">Extracción</span>
+      <span class="odonto-estado-pill" data-estado="corona">Corona</span>
+      <span class="odonto-estado-pill" data-estado="tratado">Tratado</span>
+      <span class="odonto-estado-pill" data-estado="fractura">Fractura</span>
+      <span class="odonto-estado-pill" data-estado="ausente">Ausente</span>
+    </div>
+
+    <!-- Dientes superior -->
+    <div class="odonto-wrap card">
+      <div class="odonto-label">Superior</div>
+      <div class="odonto-row" id="row-superior"></div>
+      <div class="odonto-label" style="margin-top:12px">Inferior</div>
+      <div class="odonto-row" id="row-inferior"></div>
+    </div>
+
+    <!-- Info diente seleccionado -->
+    <div class="odonto-info card" id="odonto-info" style="display:none">
+      <span id="odonto-info-text"></span>
+      <div class="odonto-info-actions">
+        <button class="btn btn-sm btn-secondary" onclick="cerrarInfo()">Cerrar</button>
+      </div>
+    </div>
+  </section>
+
   <!-- Nueva consulta -->
   <section class="ficha-section">
     <h2 class="section-title">Nueva Consulta</h2>
     <form method="POST" class="ficha-form card">
       <div class="form-group">
         <label class="form-label">Fecha</label>
-        <input type="date" name="fecha" class="form-input"
-               value="{{ today }}" required />
+        <input type="date" name="fecha" class="form-input" value="{{ today }}" required />
       </div>
-
       <div class="form-group">
-        <label class="form-label">Motivo de la consulta *</label>
+        <label class="form-label">Motivo *</label>
         <input type="text" name="motivo" class="form-input"
                placeholder="Ej: Dolor molar, Control, Limpieza…" required />
       </div>
-
       <div class="form-group">
         <label class="form-label">Diagnóstico</label>
         <textarea name="diagnostico" class="form-input form-textarea"
                   placeholder="Diagnóstico clínico…" rows="3"></textarea>
       </div>
-
       <div class="form-group">
         <label class="form-label">Tratamiento</label>
         <textarea name="tratamiento" class="form-input form-textarea"
                   placeholder="Tratamiento realizado o indicado…" rows="3"></textarea>
       </div>
-
       <div class="form-group">
         <label class="form-label">Observaciones</label>
         <textarea name="observaciones" class="form-input form-textarea"
-                  placeholder="Notas adicionales…" rows="3"></textarea>
+                  placeholder="Notas adicionales…" rows="2"></textarea>
       </div>
-
       <div class="form-actions">
         <a href="/pacientes/{{ paciente.id }}" class="btn btn-secondary">Cancelar</a>
         <button type="submit" class="btn btn-primary">Guardar consulta</button>
@@ -65,7 +94,7 @@
     </form>
   </section>
 
-  <!-- Historial previo -->
+  <!-- Historial -->
   {% if historial %}
   <section class="ficha-section">
     <h2 class="section-title">Consultas anteriores</h2>
@@ -75,15 +104,9 @@
         <div class="timeline-date">{{ c.fecha }}</div>
         <div class="timeline-body">
           <div class="timeline-motivo">{{ c.motivo }}</div>
-          {% if c.diagnostico %}
-          <div class="timeline-field"><strong>Diagnóstico:</strong> {{ c.diagnostico }}</div>
-          {% endif %}
-          {% if c.tratamiento %}
-          <div class="timeline-field"><strong>Tratamiento:</strong> {{ c.tratamiento }}</div>
-          {% endif %}
-          {% if c.observaciones %}
-          <div class="timeline-field"><strong>Observaciones:</strong> {{ c.observaciones }}</div>
-          {% endif %}
+          {% if c.diagnostico %}<div class="timeline-field"><strong>Diagnóstico:</strong> {{ c.diagnostico }}</div>{% endif %}
+          {% if c.tratamiento %}<div class="timeline-field"><strong>Tratamiento:</strong> {{ c.tratamiento }}</div>{% endif %}
+          {% if c.observaciones %}<div class="timeline-field"><strong>Observaciones:</strong> {{ c.observaciones }}</div>{% endif %}
         </div>
       </div>
       {% endfor %}
@@ -92,4 +115,121 @@
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const PACIENTE_ID = {{ paciente.id }};
+
+const ESTADOS = ["normal","caries","extraccion","corona","tratado","fractura","ausente"];
+const COLORES = {
+  normal:     { bg: "#FFFFFF", border: "#CBD5E1", text: "#64748B" },
+  caries:     { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" },
+  extraccion: { bg: "#F1F5F9", border: "#94A3B8", text: "#475569" },
+  corona:     { bg: "#DBEAFE", border: "#3B82F6", text: "#1D4ED8" },
+  tratado:    { bg: "#D1FAE5", border: "#10B981", text: "#065F46" },
+  fractura:   { bg: "#FEF3C7", border: "#F59E0B", text: "#92400E" },
+  ausente:    { bg: "#E2E8F0", border: "#94A3B8", text: "#475569" },
+};
+const SIMBOLOS = {
+  extraccion: "✕", corona: "C", fractura: "/", ausente: "—"
+};
+const LABELS = {
+  normal:"Sano", caries:"Caries", extraccion:"Extracción",
+  corona:"Corona", tratado:"Tratado", fractura:"Fractura", ausente:"Ausente"
+};
+
+const SUPERIOR = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+const INFERIOR = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+
+let estadoDientes = {};
+let dienteSel = null;
+
+function renderFila(numeros, containerId) {
+  const cont = document.getElementById(containerId);
+  cont.innerHTML = "";
+  numeros.forEach(num => {
+    const estado = estadoDientes[num] || "normal";
+    const col = COLORES[estado];
+    const div = document.createElement("div");
+    div.className = "diente";
+    div.dataset.num = num;
+    div.style.background = col.bg;
+    div.style.borderColor = col.border;
+    div.style.color = col.text;
+    div.innerHTML = `
+      <div class="diente-num">${num}</div>
+      <div class="diente-sym">${SIMBOLOS[estado] || ""}</div>
+    `;
+    div.addEventListener("click", () => seleccionarDiente(num, div));
+    cont.appendChild(div);
+  });
+}
+
+function seleccionarDiente(num, el) {
+  // Avanza al siguiente estado
+  const est = estadoDientes[num] || "normal";
+  const idx = ESTADOS.indexOf(est);
+  const nuevo = ESTADOS[(idx + 1) % ESTADOS.length];
+  estadoDientes[num] = nuevo;
+
+  const col = COLORES[nuevo];
+  el.style.background = col.bg;
+  el.style.borderColor = col.border;
+  el.style.color = col.text;
+  el.querySelector(".diente-sym").textContent = SIMBOLOS[nuevo] || "";
+
+  // Mostrar info
+  const info = document.getElementById("odonto-info");
+  document.getElementById("odonto-info-text").textContent =
+    `Diente ${num} — ${LABELS[nuevo]}`;
+  info.style.display = "flex";
+  dienteSel = num;
+}
+
+function cerrarInfo() {
+  document.getElementById("odonto-info").style.display = "none";
+}
+
+async function guardarOdontograma() {
+  const btn = document.getElementById("btnGuardarOdonto");
+  btn.textContent = "Guardando…";
+  btn.disabled = true;
+  try {
+    await fetch(`/api/odontograma/${PACIENTE_ID}`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(estadoDientes),
+    });
+    btn.textContent = "✓ Guardado";
+    btn.style.background = "var(--success)";
+    setTimeout(() => {
+      btn.textContent = "Guardar";
+      btn.style.background = "";
+      btn.disabled = false;
+    }, 2000);
+  } catch(e) {
+    btn.textContent = "Error";
+    btn.disabled = false;
+  }
+}
+
+// Leyenda: click para entender colores
+document.querySelectorAll(".odonto-estado-pill").forEach(pill => {
+  const est = pill.dataset.estado;
+  const col = COLORES[est];
+  pill.style.background = col.bg;
+  pill.style.borderColor = col.border;
+  pill.style.color = col.text;
+});
+
+// Cargar odontograma guardado
+fetch(`/api/odontograma/${PACIENTE_ID}`)
+  .then(r => r.json())
+  .then(data => {
+    estadoDientes = data || {};
+    renderFila(SUPERIOR, "row-superior");
+    renderFila(INFERIOR, "row-inferior");
+  });
+</script>
 {% endblock %}
