@@ -29,7 +29,8 @@ def pacientes():
         lista = db.buscar_pacientes(q)
     else:
         lista = db.listar_pacientes()
-    return render_template("pacientes.html", pacientes=lista, q=q)
+    n_preguntas = len(db.listar_preguntas(solo_activas=True))
+    return render_template("pacientes.html", pacientes=lista, q=q, n_preguntas=n_preguntas)
 
 
 @app.route("/pacientes/nuevo", methods=["GET", "POST"])

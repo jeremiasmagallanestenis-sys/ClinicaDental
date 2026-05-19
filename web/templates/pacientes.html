@@ -5,57 +5,142 @@
 
 {% block content %}
 <div class="page-pacientes">
-  <!-- Search bar -->
-  <div class="search-wrapper">
-    <div class="search-box">
-      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input
-        type="text"
-        class="search-input"
-        id="searchInput"
-        placeholder="Buscar por nombre o DNI…"
-        value="{{ q }}"
-        autocomplete="off"
-      />
-      {% if q %}
-      <a href="/pacientes" class="search-clear">✕</a>
-      {% endif %}
+
+  <!-- Hero dental banner (matches _build_hero in pantalla_principal.py) -->
+  <div class="hero-banner">
+    <div class="hero-banner-inner">
+      <!-- Left: tooth + brand -->
+      <div class="hero-left">
+        <svg class="hero-tooth" viewBox="0 0 64 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M32 64 L28 52 L22 36 L14 44 L20 18 L32 10 L44 18 L50 44 L42 36 L36 52 Z"
+                fill="#EEF2FF" stroke="#A5B4FC" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path d="M20 22 C24 16 28 14 32 12 C36 14 40 16 44 22"
+                fill="none" stroke="#A5B4FC" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <div class="hero-brand">
+          <div class="hero-title">Sistema de Gestión</div>
+          <div class="hero-subtitle">Odontológica Profesional</div>
+          <div class="hero-desc">Registrá y gestioná el historial clínico de tus pacientes</div>
+        </div>
+      </div>
+
+      <!-- Right: stat chips -->
+      <div class="hero-stats">
+        <div class="hero-chip">
+          <span class="hero-chip-icon">🦷</span>
+          <span class="hero-chip-value">{{ pacientes|length }}</span>
+          <span class="hero-chip-label">Pacientes</span>
+        </div>
+        <div class="hero-chip">
+          <span class="hero-chip-icon">📋</span>
+          <span class="hero-chip-value">{{ n_preguntas }}</span>
+          <span class="hero-chip-label">Preguntas activas</span>
+        </div>
+        <div class="hero-chip">
+          <span class="hero-chip-icon">✓</span>
+          <span class="hero-chip-value">Online</span>
+          <span class="hero-chip-label">Sistema</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Patient list -->
-  <div class="patient-list" id="patientList">
-    {% if pacientes %}
-      {% for p in pacientes %}
-      <a href="/pacientes/{{ p.id }}" class="patient-row" data-nombre="{{ p.nombre|lower }}" data-dni="{{ p.dni }}">
-        <div class="avatar avatar-{{ loop.index0 % 8 }}">
-          {{ p.nombre.split()[0][0] }}{% if p.nombre.split()|length > 1 %}{{ p.nombre.split()[-1][0] }}{% endif %}
+  <!-- Page header (white bar) -->
+  <div class="page-header">
+    <div class="page-header-row">
+      <div>
+        <div class="page-header-title">Pacientes</div>
+        <div class="page-header-sub" id="pacientesSubtitle">
+          {% if q %}
+            Resultados para "{{ q }}"
+          {% elif pacientes %}
+            {{ pacientes|length }} paciente{% if pacientes|length != 1 %}s{% endif %} registrado{% if pacientes|length != 1 %}s{% endif %}
+          {% else %}
+            Sin pacientes registrados
+          {% endif %}
         </div>
-        <div class="patient-info">
-          <div class="patient-name">{{ p.nombre }}</div>
-          <div class="patient-sub">DNI: {{ p.dni }}{% if p.telefono %} · {{ p.telefono }}{% endif %}</div>
-        </div>
-        <svg class="patient-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6"/>
-        </svg>
-      </a>
-      {% endfor %}
-    {% else %}
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-        </svg>
-        <p>{% if q %}No se encontraron pacientes para "{{ q }}"{% else %}No hay pacientes registrados{% endif %}</p>
       </div>
+      <a href="/pacientes/nuevo" class="btn btn-primary">+ Nuevo paciente</a>
+    </div>
+
+    <!-- Search bar -->
+    <div class="search-wrapper">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          class="search-input"
+          id="searchInput"
+          placeholder="Buscar por nombre o DNI…"
+          value="{{ q }}"
+          autocomplete="off"
+        />
+        {% if q %}
+        <a href="/pacientes" class="search-clear">✕</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Patient list body -->
+  <div class="page-body">
+    {% if pacientes %}
+    <!-- Column headers -->
+    <div class="list-col-header">
+      <div style="width:3px; flex-shrink:0;"></div><!-- accent bar placeholder -->
+      <div style="width:44px; flex-shrink:0;"></div><!-- avatar placeholder -->
+      <div class="list-col-header-item expand" style="padding-left:10px;">Nombre del paciente</div>
+      <div class="list-col-header-item fixed">Teléfono</div>
+      <div style="width:40px; flex-shrink:0;"></div>
+    </div>
+    <div class="list-divider"></div>
     {% endif %}
+
+    <div class="patient-list" id="patientList">
+      {% if pacientes %}
+        {% for p in pacientes %}
+        <a href="/pacientes/{{ p.id }}" class="patient-row" data-nombre="{{ p.nombre|lower }}" data-dni="{{ p.dni }}">
+          <div class="patient-row-inner">
+            <div class="avatar avatar-sm avatar-{{ loop.index0 % 8 }}">
+              {{ p.nombre.split()[0][0] }}{% if p.nombre.split()|length > 1 %}{{ p.nombre.split()[-1][0] }}{% endif %}
+            </div>
+            <div class="patient-info">
+              <div class="patient-name">{{ p.nombre }}</div>
+              <div class="patient-sub">
+                <span>DNI {{ p.dni }}</span>
+                {% if p.fecha_nacimiento %}
+                <span class="patient-sub-sep">·</span>
+                <span>Nac. {{ p.fecha_nacimiento }}</span>
+                {% endif %}
+              </div>
+            </div>
+            {% if p.telefono %}
+            <span class="patient-phone">{{ p.telefono }}</span>
+            {% endif %}
+            <span class="patient-chevron">›</span>
+          </div>
+        </a>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+          </svg>
+          <p class="empty-state-title">{% if q %}No se encontraron pacientes para "{{ q }}"{% else %}No hay pacientes aún{% endif %}</p>
+          {% if not q %}
+          <p class="empty-state-sub">Hacé clic en '+ Nuevo paciente' para agregar el primero.</p>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
   </div>
 </div>
 
-<!-- FAB -->
+<!-- FAB (mobile) -->
 <a href="/pacientes/nuevo" class="fab" title="Nuevo paciente">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
     <line x1="12" y1="5" x2="12" y2="19"/>
@@ -72,11 +157,22 @@
 
   searchInput.addEventListener('input', () => {
     const q = searchInput.value.toLowerCase().trim();
+    let visible = 0;
     rows.forEach(row => {
       const nombre = row.dataset.nombre || '';
       const dni = row.dataset.dni || '';
-      row.style.display = (!q || nombre.includes(q) || dni.includes(q)) ? '' : 'none';
+      const show = !q || nombre.includes(q) || dni.includes(q);
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
     });
+    const sub = document.getElementById('pacientesSubtitle');
+    if (sub) {
+      if (q) {
+        sub.textContent = visible + ' resultado' + (visible !== 1 ? 's' : '') + ' para "' + searchInput.value + '"';
+      } else {
+        sub.textContent = rows.length + ' paciente' + (rows.length !== 1 ? 's' : '') + ' registrado' + (rows.length !== 1 ? 's' : '');
+      }
+    }
   });
 </script>
 {% endblock %}

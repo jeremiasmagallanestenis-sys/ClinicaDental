@@ -16,13 +16,36 @@
 
   <!-- Sidebar -->
   <nav class="sidebar" id="sidebar">
+    <!-- Brand / Logo -->
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span class="sidebar-logo-icon">🦷</span>
-        <span class="sidebar-logo-text">Clínica Dental</span>
+        <!-- Tooth SVG matching desktop _draw_sidebar_tooth() -->
+        <svg class="sidebar-tooth" viewBox="0 0 36 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="
+            18,31 16,19 12.16,9.16 9.08,14.92
+            18,7.56 26.92,14.92 23.84,9.16
+            19.84,19 18,31
+            17.64,32.44 14.8,42 11.52,32.44
+            18,31
+            18.36,32.44 21.2,42 24.48,32.44
+            18,31"
+            fill="#EEF2FF" stroke="#818CF8" stroke-width="1.2" stroke-linejoin="round"/>
+          <path d="M9.08 14.92 C11 10 14 9 18 7.56 C22 9 25 10 26.92 14.92"
+                fill="none" stroke="#818CF8" stroke-width="1" stroke-linecap="round"/>
+        </svg>
+        <div class="sidebar-logo-text-wrap">
+          <span class="sidebar-logo-name">Historial</span>
+          <span class="sidebar-logo-sub">Clínico Dental</span>
+        </div>
       </div>
     </div>
+
+    <!-- Nav -->
     <ul class="sidebar-nav">
+      <!-- PRINCIPAL section -->
+      <li>
+        <div class="sidebar-section-label">PRINCIPAL</div>
+      </li>
       <li>
         <a href="/pacientes" class="sidebar-link {% if request.path.startswith('/pacientes') %}active{% endif %}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -45,7 +68,43 @@
           Calendario
         </a>
       </li>
+
+      <!-- Divider -->
+      <li><div class="sidebar-divider" style="margin:14px 8px;"></div></li>
+
+      <!-- SISTEMA section -->
+      <li>
+        <div class="sidebar-section-label">SISTEMA</div>
+      </li>
+      <li>
+        <a href="#" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+          </svg>
+          Configuración
+        </a>
+      </li>
+      <li>
+        <a href="#" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+          Copia de seguridad
+        </a>
+      </li>
     </ul>
+
+    <!-- Footer: Sistema activo -->
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-divider"></div>
+      <div class="sidebar-status">
+        <div class="sidebar-status-dot"></div>
+        <span class="sidebar-status-text">Sistema activo</span>
+      </div>
+    </div>
   </nav>
 
   <!-- Main content -->

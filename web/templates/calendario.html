@@ -5,39 +5,56 @@
 
 {% block content %}
 <div class="page-calendario">
-  <!-- View toggle + nav -->
+
+  <!-- Dark agenda strip (matches _render_agenda_hoy in calendario.py) -->
+  <div class="agenda-strip" id="agendaStrip">
+    <div class="agenda-strip-inner">
+      <div class="agenda-left">
+        <div class="agenda-today-label" id="agendaTodayLabel">📅 Hoy — cargando…</div>
+        <div class="agenda-today-sub" id="agendaTodaySub">Sin citas programadas para hoy.</div>
+      </div>
+      <div class="agenda-pills" id="agendaPills"></div>
+      <button class="btn btn-primary btn-sm" onclick="openNewCita(todayStr)">+ Nueva cita</button>
+    </div>
+  </div>
+
+  <!-- Calendar toolbar -->
   <div class="cal-toolbar">
     <div class="view-toggle">
-      <button class="toggle-btn active" id="btnSemana" onclick="switchView('semana')">Semana</button>
-      <button class="toggle-btn" id="btnMes" onclick="switchView('mes')">Mes</button>
+      <button class="toggle-btn active" id="btnSemana" onclick="switchView('semana')">Semanal</button>
+      <button class="toggle-btn" id="btnMes" onclick="switchView('mes')">Mensual</button>
     </div>
     <div class="cal-nav">
+      <button class="btn btn-secondary btn-sm" onclick="goToday()">Hoy</button>
       <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">&#8592;</button>
       <span class="cal-label" id="calLabel">—</span>
       <button class="nav-btn" id="nextBtn" onclick="navigate(1)">&#8594;</button>
     </div>
   </div>
 
-  <!-- Weekly view -->
-  <div id="weekView" class="week-view">
-    <div class="week-grid" id="weekGrid">
-      <!-- Filled by JS -->
+  <!-- Calendar body -->
+  <div class="cal-body">
+    <!-- Weekly view -->
+    <div id="weekView" class="week-view">
+      <div class="week-grid" id="weekGrid">
+        <!-- Filled by JS -->
+      </div>
     </div>
-  </div>
 
-  <!-- Monthly view -->
-  <div id="monthView" class="month-view" style="display:none">
-    <div class="month-header-row">
-      <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div>
-      <div>Vie</div><div>Sáb</div><div>Dom</div>
-    </div>
-    <div class="month-grid" id="monthGrid">
-      <!-- Filled by JS -->
+    <!-- Monthly view -->
+    <div id="monthView" class="month-view" style="display:none">
+      <div class="month-header-row">
+        <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div>
+        <div>Vie</div><div>Sáb</div><div>Dom</div>
+      </div>
+      <div class="month-grid" id="monthGrid">
+        <!-- Filled by JS -->
+      </div>
     </div>
   </div>
 </div>
 
-<!-- FAB -->
+<!-- FAB (mobile) -->
 <button class="fab" onclick="openNewCita()" title="Nueva cita">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
     <line x1="12" y1="5" x2="12" y2="19"/>
@@ -90,6 +107,53 @@ let currentView = 'semana';
 let currentDate = new Date();
 currentDate.setHours(0,0,0,0);
 
+const DIAS  = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_SEM = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const PILL_CLASSES = ['pill-blue','pill-green','pill-yellow','pill-pink','pill-indigo','pill-orange'];
+
+const todayStr = isoDate(new Date());
+
+// ── Agenda strip ───────────────────────────────────────
+async function renderAgendaHoy() {
+  const today = new Date();
+  const label = `📅 Hoy — ${DIAS_SEM[today.getDay()]} ${today.getDate()} de ${MESES[today.getMonth()]}`;
+  document.getElementById('agendaTodayLabel').textContent = label;
+
+  const res = await fetch(`/api/citas_mes?year=${today.getFullYear()}&month=${today.getMonth()+1}`);
+  const all = await res.json();
+  const citas = all.filter(c => c.fecha === todayStr).sort((a,b) => a.hora.localeCompare(b.hora));
+
+  const sub = document.getElementById('agendaTodaySub');
+  const pills = document.getElementById('agendaPills');
+  pills.innerHTML = '';
+
+  if (citas.length === 0) {
+    sub.textContent = 'Sin citas programadas para hoy.';
+  } else {
+    sub.textContent = citas.length + ' cita' + (citas.length > 1 ? 's' : '') + ' agendada' + (citas.length > 1 ? 's' : '');
+    citas.slice(0, 6).forEach((cita, i) => {
+      const cls = PILL_CLASSES[i % PILL_CLASSES.length];
+      // extract color info from class
+      const bgMap = {
+        'pill-blue':'#DBEAFE','pill-green':'#D1FAE5','pill-yellow':'#FEF3C7',
+        'pill-pink':'#FCE7F3','pill-indigo':'#E0E7FF','pill-orange':'#FFEDD5'
+      };
+      const fgMap = {
+        'pill-blue':'#1D4ED8','pill-green':'#065F46','pill-yellow':'#92400E',
+        'pill-pink':'#9D174D','pill-indigo':'#3730A3','pill-orange':'#C2410C'
+      };
+      const pill = document.createElement('span');
+      pill.className = 'agenda-pill';
+      pill.style.background = bgMap[cls];
+      pill.style.color = fgMap[cls];
+      const nombre = cita.paciente_nombre.split(' ')[0];
+      pill.textContent = `${cita.hora}  ${nombre}`;
+      pills.appendChild(pill);
+    });
+  }
+}
+
 // ── View switching ─────────────────────────────────────
 function switchView(view) {
   currentView = view;
@@ -109,6 +173,12 @@ function navigate(dir) {
   renderCalendar();
 }
 
+function goToday() {
+  currentDate = new Date();
+  currentDate.setHours(0,0,0,0);
+  renderCalendar();
+}
+
 // ── Helpers ────────────────────────────────────────────
 function isoDate(d) {
   return d.toISOString().split('T')[0];
@@ -122,12 +192,6 @@ function getMondayOf(d) {
   return m;
 }
 
-const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const COLORS = [
-  'pill-blue','pill-green','pill-yellow','pill-pink','pill-indigo','pill-orange'
-];
-
 // ── Render calendar ────────────────────────────────────
 async function renderCalendar() {
   if (currentView === 'semana') {
@@ -139,7 +203,13 @@ async function renderCalendar() {
 
 async function renderWeek() {
   const lunes = getMondayOf(currentDate);
-  const label = `${lunes.getDate()} ${MESES[lunes.getMonth()]} — ${new Date(lunes.getTime()+6*86400000).getDate()} ${MESES[new Date(lunes.getTime()+6*86400000).getMonth()]} ${lunes.getFullYear()}`;
+  const domingo = new Date(lunes.getTime() + 6*86400000);
+  let label;
+  if (lunes.getMonth() === domingo.getMonth()) {
+    label = `${lunes.getDate()} – ${domingo.getDate()}  ${MESES[lunes.getMonth()]}  ${lunes.getFullYear()}`;
+  } else {
+    label = `${lunes.getDate()} ${MESES[lunes.getMonth()]} – ${domingo.getDate()} ${MESES[domingo.getMonth()]}  ${lunes.getFullYear()}`;
+  }
   document.getElementById('calLabel').textContent = label;
 
   const res = await fetch(`/api/citas_semana?fecha=${isoDate(lunes)}`);
@@ -164,14 +234,17 @@ async function renderWeek() {
   for (let d = 0; d < 7; d++) {
     const dayDate = new Date(lunes.getTime() + d * 86400000);
     const dayStr = isoDate(dayDate);
-    const isToday = dayStr === isoDate(new Date());
+    const isToday = dayStr === todayStr;
 
     const col = document.createElement('div');
     col.className = 'day-col' + (isToday ? ' today' : '');
 
     const hdr = document.createElement('div');
     hdr.className = 'day-col-header';
-    hdr.innerHTML = `<span class="day-name">${DIAS[d]}</span><span class="day-num${isToday ? ' today-num' : ''}">${dayDate.getDate()}</span>`;
+    const numEl = isToday
+      ? `<span class="day-num today-num">${dayDate.getDate()}</span>`
+      : `<span class="day-num">${dayDate.getDate()}</span>`;
+    hdr.innerHTML = `<span class="day-name">${DIAS[d]}</span>${numEl}`;
     col.appendChild(hdr);
 
     const body = document.createElement('div');
@@ -190,10 +263,9 @@ async function renderWeek() {
     // Appointments
     const dayCitas = citas.filter(c => c.fecha === dayStr);
     dayCitas.forEach((cita, i) => {
-      const pill = createPill(cita, i);
-      // Position by time
+      const pill = createPill(cita, cita.paciente_id % PILL_CLASSES.length);
       const [hh, mm] = cita.hora.split(':').map(Number);
-      const top = ((hh - 7) * 60 + mm) / 15 * 15; // px per 15min slot
+      const top = ((hh - 7) * 60 + mm);
       pill.style.top = `${top}px`;
       pill.style.position = 'absolute';
       body.style.position = 'relative';
@@ -207,8 +279,9 @@ async function renderWeek() {
 
 function createPill(cita, colorIdx) {
   const pill = document.createElement('div');
-  pill.className = `cita-pill ${COLORS[colorIdx % COLORS.length]}`;
-  pill.innerHTML = `<strong>${cita.hora}</strong> ${cita.paciente_nombre}<br><small>${cita.motivo}</small>`;
+  pill.className = `cita-pill ${PILL_CLASSES[colorIdx % PILL_CLASSES.length]}`;
+  const nombre = cita.paciente_nombre.split(' ')[0];
+  pill.innerHTML = `<strong>${cita.hora}</strong> ${nombre}<br><small>${cita.motivo || ''}</small>`;
   pill.addEventListener('click', (e) => {
     e.stopPropagation();
     openEditCita(cita);
@@ -219,7 +292,7 @@ function createPill(cita, colorIdx) {
 async function renderMonth() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  document.getElementById('calLabel').textContent = `${MESES[month]} ${year}`;
+  document.getElementById('calLabel').textContent = `${MESES[month]}  ${year}`;
 
   const res = await fetch(`/api/citas_mes?year=${year}&month=${month+1}`);
   const citas = await res.json();
@@ -229,7 +302,6 @@ async function renderMonth() {
 
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  // Monday-based: 0=Mon...6=Sun
   const startOffset = (firstDay.getDay() + 6) % 7;
   const totalDays = lastDay.getDate();
 
@@ -243,20 +315,25 @@ async function renderMonth() {
   // Day cells
   for (let day = 1; day <= totalDays; day++) {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const isToday = dateStr === isoDate(new Date());
+    const isToday = dateStr === todayStr;
     const cell = document.createElement('div');
     cell.className = 'month-cell' + (isToday ? ' today' : '');
 
     const numEl = document.createElement('div');
     numEl.className = 'month-day-num';
-    numEl.textContent = day;
+    if (isToday) {
+      numEl.innerHTML = `<span>${day}</span>`;
+    } else {
+      numEl.textContent = day;
+    }
     cell.appendChild(numEl);
 
     const dayCitas = citas.filter(c => c.fecha === dateStr);
     dayCitas.slice(0, 3).forEach((cita, i) => {
       const dot = document.createElement('div');
-      dot.className = `month-pill ${COLORS[i % COLORS.length]}`;
-      dot.textContent = `${cita.hora} ${cita.paciente_nombre}`;
+      dot.className = `month-pill ${PILL_CLASSES[(cita.paciente_id) % PILL_CLASSES.length]}`;
+      const nombre = cita.paciente_nombre.split(' ')[0];
+      dot.textContent = `${cita.hora} ${nombre}`;
       dot.addEventListener('click', (e) => { e.stopPropagation(); openEditCita(cita); });
       cell.appendChild(dot);
     });
@@ -287,7 +364,7 @@ async function openNewCita(fecha, hora) {
   document.getElementById('editCitaId').value = '';
   document.getElementById('btnDelete').style.display = 'none';
   fillPacienteSelect(null);
-  document.getElementById('modalFecha').value = fecha || isoDate(new Date());
+  document.getElementById('modalFecha').value = fecha || todayStr;
   document.getElementById('modalHora').value = hora || '09:00';
   document.getElementById('modalMotivo').value = '';
   document.getElementById('citaModal').style.display = 'flex';
@@ -345,6 +422,7 @@ document.getElementById('citaForm').addEventListener('submit', async (e) => {
   });
   if (res.ok) {
     closeCitaModal();
+    renderAgendaHoy();
     renderCalendar();
   } else {
     alert('Error al guardar la cita');
@@ -357,6 +435,7 @@ async function deleteCita() {
   const res = await fetch(`/api/citas/${id}`, { method: 'DELETE' });
   if (res.ok) {
     closeCitaModal();
+    renderAgendaHoy();
     renderCalendar();
   } else {
     alert('Error al eliminar la cita');
@@ -364,6 +443,7 @@ async function deleteCita() {
 }
 
 // ── Init ───────────────────────────────────────────────
+renderAgendaHoy();
 renderCalendar();
 </script>
 {% endblock %}
