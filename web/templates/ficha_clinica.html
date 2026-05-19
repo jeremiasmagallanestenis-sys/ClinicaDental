@@ -67,6 +67,54 @@
       </div>
     </section>
 
+    <!-- CONSENTIMIENTO -->
+    <section class="ficha-section">
+      <div class="ficha-section-title"><span class="ficha-section-bar"></span>Consentimiento Informado</div>
+      <div class="card ficha-form consentimiento-card">
+        <p class="consentimiento-texto">
+          He sido informado/a y he entendido que el tratamiento odontológico es un proceso biológico
+          por lo cual no se puede garantizar su éxito. Me han comunicado acerca del tratamiento a
+          realizar y sus posibles riesgos. He leído y entendido este documento. Consiento se me
+          realice dicho tratamiento.
+        </p>
+        <div class="firma-row">
+          <div class="firma-field">
+            <div class="firma-label">Firma</div>
+            <canvas id="firmaCanvas" class="firma-canvas"></canvas>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarFirma()" style="margin-top:6px">Limpiar</button>
+          </div>
+          <div class="firma-field">
+            <div class="firma-label">Aclaración</div>
+            <input type="text" id="aclaracion" class="form-input" placeholder="Nombre completo" />
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══════════════ TAB 2: ODONTOGRAMA ═══════════════ -->
+  <div id="tab-odontograma" class="ficha-tab-panel" style="display:none">
+
+    <section class="ficha-section">
+      <div class="ficha-section-title"><span class="ficha-section-bar"></span>Odontograma</div>
+      <div class="card odonto-card">
+        <div class="odonto-leyenda" id="odonto-leyenda"></div>
+
+        <div class="odonto-jaw-label">Superior — Adulto</div>
+        <div class="odonto-row" id="row-adulto-sup"></div>
+
+        <div class="odonto-jaw-label" style="margin-top:16px">Inferior — Adulto</div>
+        <div class="odonto-row" id="row-adulto-inf"></div>
+
+        <div class="odonto-divider"></div>
+
+        <div class="odonto-jaw-label">Superior — Pediátrico</div>
+        <div class="odonto-row" id="row-ped-sup"></div>
+
+        <div class="odonto-jaw-label" style="margin-top:16px">Inferior — Pediátrico</div>
+        <div class="odonto-row" id="row-ped-inf"></div>
+      </div>
+    </section>
     <!-- ENFERMEDADES -->
     <section class="ficha-section">
       <div class="ficha-section-title"><span class="ficha-section-bar"></span>¿Posee alguna enfermedad?</div>
@@ -139,55 +187,6 @@
           <label class="form-label">Observaciones médicas</label>
           <textarea id="observaciones" class="form-input form-textarea" rows="3" placeholder="Observaciones adicionales…"></textarea>
         </div>
-      </div>
-    </section>
-
-    <!-- CONSENTIMIENTO -->
-    <section class="ficha-section">
-      <div class="ficha-section-title"><span class="ficha-section-bar"></span>Consentimiento Informado</div>
-      <div class="card ficha-form consentimiento-card">
-        <p class="consentimiento-texto">
-          He sido informado/a y he entendido que el tratamiento odontológico es un proceso biológico
-          por lo cual no se puede garantizar su éxito. Me han comunicado acerca del tratamiento a
-          realizar y sus posibles riesgos. He leído y entendido este documento. Consiento se me
-          realice dicho tratamiento.
-        </p>
-        <div class="firma-row">
-          <div class="firma-field">
-            <div class="firma-label">Firma</div>
-            <canvas id="firmaCanvas" class="firma-canvas"></canvas>
-            <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarFirma()" style="margin-top:6px">Limpiar</button>
-          </div>
-          <div class="firma-field">
-            <div class="firma-label">Aclaración</div>
-            <input type="text" id="aclaracion" class="form-input" placeholder="Nombre completo" />
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- ═══════════════ TAB 2: ODONTOGRAMA ═══════════════ -->
-  <div id="tab-odontograma" class="ficha-tab-panel" style="display:none">
-
-    <section class="ficha-section">
-      <div class="ficha-section-title"><span class="ficha-section-bar"></span>Odontograma</div>
-      <div class="card odonto-card">
-        <div class="odonto-leyenda" id="odonto-leyenda"></div>
-
-        <div class="odonto-jaw-label">Superior — Adulto</div>
-        <div class="odonto-row" id="row-adulto-sup"></div>
-
-        <div class="odonto-jaw-label" style="margin-top:16px">Inferior — Adulto</div>
-        <div class="odonto-row" id="row-adulto-inf"></div>
-
-        <div class="odonto-divider"></div>
-
-        <div class="odonto-jaw-label">Superior — Pediátrico</div>
-        <div class="odonto-row" id="row-ped-sup"></div>
-
-        <div class="odonto-jaw-label" style="margin-top:16px">Inferior — Pediátrico</div>
-        <div class="odonto-row" id="row-ped-inf"></div>
       </div>
     </section>
   </div>
