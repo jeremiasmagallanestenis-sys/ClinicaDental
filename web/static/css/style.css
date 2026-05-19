@@ -1247,8 +1247,8 @@ svg { width: 20px; height: 20px; flex-shrink: 0; }
   font-size: 10px; font-weight: 700; color: var(--text-muted);
   text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px;
 }
-.odonto-arch-wrap { width: 100%; overflow-x: auto; }
-.odonto-arch-svg { width: 100%; max-width: 420px; display: block; margin: 0 auto; }
+.odonto-arch-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.odonto-arch-svg { width: 100%; max-width: 420px; height: auto; display: block; margin: 0 auto; }
 .odonto-arch-svg-ped { max-width: 340px; }
 
 /* ── Ficha: tabs ─────────────────────────────────────────── */
