@@ -280,7 +280,7 @@ const PED_SUP    = [55,54,53,52,51,61,62,63,64,65];
 const PED_INF    = [85,84,83,82,81,71,72,73,74,75];
 
 let estadoDientes = {};
-let odontoCargado = false;
+let odontoCargado = true;
 
 function renderFila(nums, containerId) {
   const cont = document.getElementById(containerId);
@@ -329,6 +329,8 @@ function cargarOdontograma() {
       odontoCargado = true;
     });
 }
+
+cargarOdontograma();
 
 // ── Historia médica ───────────────────────────────────────────
 fetch(`/api/historial_medico/${PACIENTE_ID}`)
