@@ -4,64 +4,165 @@
 
 {% block topbar_actions %}
 <a href="/pacientes/{{ paciente.id }}" class="btn-icon" title="Volver">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <polyline points="15 18 9 12 15 6"/>
-  </svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
 </a>
 {% endblock %}
 
 {% block content %}
 <div class="ficha-page">
 
-  <!-- Paciente -->
+  <!-- Header paciente -->
   <div class="ficha-patient-bar card">
-    <div class="hero-avatar avatar-0" style="width:40px;height:40px;font-size:14px;min-width:40px;">
+    <div class="avatar avatar-md avatar-{{ paciente.id % 8 }}">
       {{ paciente.nombre.split()[0][0] }}{% if paciente.nombre.split()|length > 1 %}{{ paciente.nombre.split()[-1][0] }}{% endif %}
     </div>
     <div>
       <div class="ficha-patient-name">{{ paciente.nombre }}</div>
-      <div class="ficha-patient-meta">DNI {{ paciente.dni }}</div>
+      <div class="ficha-patient-meta">DNI {{ paciente.dni }}{% if paciente.telefono %} · {{ paciente.telefono }}{% endif %}</div>
     </div>
+    <button class="btn btn-primary btn-sm" id="btnGuardarFicha" onclick="guardarFicha()" style="margin-left:auto">Guardar ficha</button>
   </div>
 
-  <!-- Odontograma -->
+  <!-- 1. ODONTOGRAMA -->
   <section class="ficha-section">
-    <div class="section-header">
-      <h2 class="section-title">Odontograma</h2>
-      <button class="btn btn-primary btn-sm" id="btnGuardarOdonto" onclick="guardarOdontograma()">Guardar</button>
+    <div class="ficha-section-title">
+      <span class="ficha-section-bar"></span>Odontograma
     </div>
 
-    <!-- Leyenda -->
-    <div class="odonto-leyenda">
-      <span class="odonto-estado-pill" data-estado="normal">Sano</span>
-      <span class="odonto-estado-pill" data-estado="caries">Caries</span>
-      <span class="odonto-estado-pill" data-estado="extraccion">Extracción</span>
-      <span class="odonto-estado-pill" data-estado="corona">Corona</span>
-      <span class="odonto-estado-pill" data-estado="tratado">Tratado</span>
-      <span class="odonto-estado-pill" data-estado="fractura">Fractura</span>
-      <span class="odonto-estado-pill" data-estado="ausente">Ausente</span>
-    </div>
+    <div class="card odonto-card">
+      <!-- Leyenda -->
+      <div class="odonto-leyenda" id="odonto-leyenda"></div>
 
-    <!-- Dientes superior -->
-    <div class="odonto-wrap card">
-      <div class="odonto-label">Superior</div>
-      <div class="odonto-row" id="row-superior"></div>
-      <div class="odonto-label" style="margin-top:12px">Inferior</div>
-      <div class="odonto-row" id="row-inferior"></div>
-    </div>
+      <!-- Dientes adultos superior -->
+      <div class="odonto-jaw-label">Superior — Adulto</div>
+      <div class="odonto-row" id="row-adulto-sup"></div>
 
-    <!-- Info diente seleccionado -->
-    <div class="odonto-info card" id="odonto-info" style="display:none">
-      <span id="odonto-info-text"></span>
-      <div class="odonto-info-actions">
-        <button class="btn btn-sm btn-secondary" onclick="cerrarInfo()">Cerrar</button>
+      <!-- Dientes adultos inferior -->
+      <div class="odonto-jaw-label" style="margin-top:16px">Inferior — Adulto</div>
+      <div class="odonto-row" id="row-adulto-inf"></div>
+
+      <div class="odonto-divider"></div>
+
+      <!-- Dientes pediátricos superior -->
+      <div class="odonto-jaw-label">Superior — Pediátrico</div>
+      <div class="odonto-row" id="row-ped-sup"></div>
+
+      <!-- Dientes pediátricos inferior -->
+      <div class="odonto-jaw-label" style="margin-top:16px">Inferior — Pediátrico</div>
+      <div class="odonto-row" id="row-ped-inf"></div>
+    </div>
+  </section>
+
+  <!-- 2. ENFERMEDADES -->
+  <section class="ficha-section">
+    <div class="ficha-section-title">
+      <span class="ficha-section-bar"></span>¿Posee alguna enfermedad?
+    </div>
+    <div class="card ficha-form">
+      <div class="enf-grid">
+        <label class="enf-check"><input type="checkbox" id="enf_cardiaca"> Cardíaca</label>
+        <label class="enf-check"><input type="checkbox" id="enf_respiratoria"> Respiratoria</label>
+        <label class="enf-check"><input type="checkbox" id="enf_digestiva"> Digestiva</label>
+        <label class="enf-check"><input type="checkbox" id="enf_renal"> Renal</label>
+        <label class="enf-check"><input type="checkbox" id="enf_circulatoria"> Circulatoria</label>
+        <label class="enf-check"><input type="checkbox" id="enf_hormonal"> Hormonal</label>
+        <label class="enf-check"><input type="checkbox" id="enf_infecciosa"> Infecciosa</label>
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label class="form-label">Otras — especificar</label>
+        <input type="text" id="enf_otras" class="form-input" placeholder="Especificar…" />
       </div>
     </div>
   </section>
 
-  <!-- Nueva consulta -->
+  <!-- 3. PREGUNTAS SÍ/NO -->
   <section class="ficha-section">
-    <h2 class="section-title">Nueva Consulta</h2>
+    <div class="ficha-section-title">
+      <span class="ficha-section-bar"></span>Información médica general
+    </div>
+    <div class="card ficha-form">
+      <div class="sino-list">
+        <div class="sino-row">
+          <span class="sino-label">¿Toma alguna medicación?</span>
+          <div class="sino-opts">
+            <label><input type="radio" name="toma_medicacion" value="si"> Sí</label>
+            <label><input type="radio" name="toma_medicacion" value="no" checked> No</label>
+          </div>
+        </div>
+        <div class="sino-row">
+          <span class="sino-label">¿Es alérgico/a a alguna medicación?</span>
+          <div class="sino-opts">
+            <label><input type="radio" name="alergico_medicacion" value="si"> Sí</label>
+            <label><input type="radio" name="alergico_medicacion" value="no" checked> No</label>
+          </div>
+        </div>
+        <div class="sino-row">
+          <span class="sino-label">¿Lo/la operaron alguna vez?</span>
+          <div class="sino-opts">
+            <label><input type="radio" name="operado" value="si"> Sí</label>
+            <label><input type="radio" name="operado" value="no" checked> No</label>
+          </div>
+        </div>
+        <div class="sino-row">
+          <span class="sino-label">¿Tuvo hemorragias?</span>
+          <div class="sino-opts">
+            <label><input type="radio" name="hemorragias" value="si"> Sí</label>
+            <label><input type="radio" name="hemorragias" value="no" checked> No</label>
+          </div>
+        </div>
+        <div class="sino-row">
+          <span class="sino-label">¿Está embarazada?</span>
+          <div class="sino-opts">
+            <label><input type="radio" name="embarazada" value="si"> Sí</label>
+            <label><input type="radio" name="embarazada" value="no" checked> No</label>
+          </div>
+        </div>
+        <div class="sino-row">
+          <span class="sino-label">¿Fuma?</span>
+          <div class="sino-opts">
+            <label><input type="radio" name="fuma" value="si"> Sí</label>
+            <label><input type="radio" name="fuma" value="no" checked> No</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label class="form-label">Observaciones</label>
+        <textarea id="observaciones" class="form-input form-textarea" rows="3" placeholder="Observaciones adicionales…"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. CONSENTIMIENTO INFORMADO -->
+  <section class="ficha-section">
+    <div class="ficha-section-title">
+      <span class="ficha-section-bar"></span>Consentimiento Informado
+    </div>
+    <div class="card ficha-form consentimiento-card">
+      <p class="consentimiento-texto">
+        He sido informado/a y he entendido que el tratamiento odontológico es un proceso biológico
+        por lo cual no se puede garantizar su éxito. Me han comunicado acerca del tratamiento a
+        realizar y sus posibles riesgos. He leído y entendido este documento. Consiento se me
+        realice dicho tratamiento.
+      </p>
+      <div class="firma-row">
+        <div class="firma-field">
+          <div class="firma-label">Firma</div>
+          <canvas id="firmaCanvas" class="firma-canvas"></canvas>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarFirma()" style="margin-top:6px">Limpiar</button>
+        </div>
+        <div class="firma-field">
+          <div class="firma-label">Aclaración</div>
+          <input type="text" id="aclaracion" class="form-input" placeholder="Nombre completo" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. NUEVA CONSULTA -->
+  <section class="ficha-section">
+    <div class="ficha-section-title">
+      <span class="ficha-section-bar"></span>Nueva Consulta
+    </div>
     <form method="POST" class="ficha-form card">
       <div class="form-group">
         <label class="form-label">Fecha</label>
@@ -69,45 +170,47 @@
       </div>
       <div class="form-group">
         <label class="form-label">Motivo *</label>
-        <input type="text" name="motivo" class="form-input"
-               placeholder="Ej: Dolor molar, Control, Limpieza…" required />
+        <input type="text" name="motivo" class="form-input" placeholder="Ej: Dolor molar, Control, Limpieza…" required />
       </div>
       <div class="form-group">
         <label class="form-label">Diagnóstico</label>
-        <textarea name="diagnostico" class="form-input form-textarea"
-                  placeholder="Diagnóstico clínico…" rows="3"></textarea>
+        <textarea name="diagnostico" class="form-input form-textarea" rows="2" placeholder="Diagnóstico clínico…"></textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Tratamiento</label>
-        <textarea name="tratamiento" class="form-input form-textarea"
-                  placeholder="Tratamiento realizado o indicado…" rows="3"></textarea>
+        <textarea name="tratamiento" class="form-input form-textarea" rows="2" placeholder="Tratamiento realizado o indicado…"></textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Observaciones</label>
-        <textarea name="observaciones" class="form-input form-textarea"
-                  placeholder="Notas adicionales…" rows="2"></textarea>
+        <textarea name="observaciones" class="form-input form-textarea" rows="2"></textarea>
       </div>
       <div class="form-actions">
-        <a href="/pacientes/{{ paciente.id }}" class="btn btn-secondary">Cancelar</a>
         <button type="submit" class="btn btn-primary">Guardar consulta</button>
       </div>
     </form>
   </section>
 
-  <!-- Historial -->
+  <!-- 6. HISTORIAL -->
   {% if historial %}
   <section class="ficha-section">
-    <h2 class="section-title">Consultas anteriores</h2>
+    <div class="ficha-section-title">
+      <span class="ficha-section-bar"></span>Consultas anteriores
+    </div>
     <div class="timeline">
       {% for c in historial %}
       <div class="timeline-item card">
-        <div class="timeline-date">{{ c.fecha }}</div>
-        <div class="timeline-body">
-          <div class="timeline-motivo">{{ c.motivo }}</div>
-          {% if c.diagnostico %}<div class="timeline-field"><strong>Diagnóstico:</strong> {{ c.diagnostico }}</div>{% endif %}
-          {% if c.tratamiento %}<div class="timeline-field"><strong>Tratamiento:</strong> {{ c.tratamiento }}</div>{% endif %}
-          {% if c.observaciones %}<div class="timeline-field"><strong>Observaciones:</strong> {{ c.observaciones }}</div>{% endif %}
+        <div class="timeline-header">
+          <span class="timeline-date-badge">{{ c.fecha }}</span>
+          <span class="timeline-motivo">{{ c.motivo }}</span>
         </div>
+        {% if c.diagnostico or c.tratamiento or c.observaciones %}
+        <div class="timeline-sep"></div>
+        <div class="timeline-fields">
+          {% if c.diagnostico %}<div class="timeline-field-row"><span class="timeline-field-label">Diagnóstico</span><span class="timeline-field-val">{{ c.diagnostico }}</span></div>{% endif %}
+          {% if c.tratamiento %}<div class="timeline-field-row"><span class="timeline-field-label">Tratamiento</span><span class="timeline-field-val">{{ c.tratamiento }}</span></div>{% endif %}
+          {% if c.observaciones %}<div class="timeline-field-row"><span class="timeline-field-label">Observaciones</span><span class="timeline-field-val">{{ c.observaciones }}</span></div>{% endif %}
+        </div>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
@@ -121,115 +224,164 @@
 <script>
 const PACIENTE_ID = {{ paciente.id }};
 
+// ── Odontograma ───────────────────────────────────────────────
 const ESTADOS = ["normal","caries","extraccion","corona","tratado","fractura","ausente"];
 const COLORES = {
-  normal:     { bg: "#FFFFFF", border: "#CBD5E1", text: "#64748B" },
-  caries:     { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" },
-  extraccion: { bg: "#F1F5F9", border: "#94A3B8", text: "#475569" },
-  corona:     { bg: "#DBEAFE", border: "#3B82F6", text: "#1D4ED8" },
-  tratado:    { bg: "#D1FAE5", border: "#10B981", text: "#065F46" },
-  fractura:   { bg: "#FEF3C7", border: "#F59E0B", text: "#92400E" },
-  ausente:    { bg: "#E2E8F0", border: "#94A3B8", text: "#475569" },
+  normal:     { bg:"#FFFFFF", border:"#CBD5E1", text:"#64748B" },
+  caries:     { bg:"#FEE2E2", border:"#EF4444", text:"#991B1B" },
+  extraccion: { bg:"#F1F5F9", border:"#94A3B8", text:"#475569" },
+  corona:     { bg:"#DBEAFE", border:"#3B82F6", text:"#1D4ED8" },
+  tratado:    { bg:"#D1FAE5", border:"#10B981", text:"#065F46" },
+  fractura:   { bg:"#FEF3C7", border:"#F59E0B", text:"#92400E" },
+  ausente:    { bg:"#E2E8F0", border:"#94A3B8", text:"#475569" },
 };
-const SIMBOLOS = {
-  extraccion: "✕", corona: "C", fractura: "/", ausente: "—"
-};
-const LABELS = {
-  normal:"Sano", caries:"Caries", extraccion:"Extracción",
-  corona:"Corona", tratado:"Tratado", fractura:"Fractura", ausente:"Ausente"
-};
+const SIMBOLOS = { extraccion:"✕", corona:"C", fractura:"/", ausente:"—" };
+const LABELS   = { normal:"Sano", caries:"Caries", extraccion:"Extracción", corona:"Corona", tratado:"Tratado", fractura:"Fractura", ausente:"Ausente" };
 
-const SUPERIOR = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
-const INFERIOR = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+const ADULTO_SUP = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+const ADULTO_INF = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+const PED_SUP    = [55,54,53,52,51,61,62,63,64,65];
+const PED_INF    = [85,84,83,82,81,71,72,73,74,75];
 
 let estadoDientes = {};
-let dienteSel = null;
 
-function renderFila(numeros, containerId) {
+function renderFila(nums, containerId) {
   const cont = document.getElementById(containerId);
   cont.innerHTML = "";
-  numeros.forEach(num => {
-    const estado = estadoDientes[num] || "normal";
-    const col = COLORES[estado];
+  nums.forEach(num => {
+    const est = estadoDientes[String(num)] || "normal";
+    const col = COLORES[est];
     const div = document.createElement("div");
     div.className = "diente";
     div.dataset.num = num;
-    div.style.background = col.bg;
-    div.style.borderColor = col.border;
-    div.style.color = col.text;
-    div.innerHTML = `
-      <div class="diente-num">${num}</div>
-      <div class="diente-sym">${SIMBOLOS[estado] || ""}</div>
-    `;
-    div.addEventListener("click", () => seleccionarDiente(num, div));
+    div.style.cssText = `background:${col.bg};border-color:${col.border};color:${col.text}`;
+    div.innerHTML = `<div class="diente-num">${num}</div><div class="diente-sym">${SIMBOLOS[est]||""}</div>`;
+    div.addEventListener("click", () => {
+      const cur = estadoDientes[String(num)] || "normal";
+      const nxt = ESTADOS[(ESTADOS.indexOf(cur)+1) % ESTADOS.length];
+      estadoDientes[String(num)] = nxt;
+      const c = COLORES[nxt];
+      div.style.background = c.bg;
+      div.style.borderColor = c.border;
+      div.style.color = c.text;
+      div.querySelector(".diente-sym").textContent = SIMBOLOS[nxt]||"";
+    });
     cont.appendChild(div);
   });
 }
 
-function seleccionarDiente(num, el) {
-  // Avanza al siguiente estado
-  const est = estadoDientes[num] || "normal";
-  const idx = ESTADOS.indexOf(est);
-  const nuevo = ESTADOS[(idx + 1) % ESTADOS.length];
-  estadoDientes[num] = nuevo;
-
-  const col = COLORES[nuevo];
-  el.style.background = col.bg;
-  el.style.borderColor = col.border;
-  el.style.color = col.text;
-  el.querySelector(".diente-sym").textContent = SIMBOLOS[nuevo] || "";
-
-  // Mostrar info
-  const info = document.getElementById("odonto-info");
-  document.getElementById("odonto-info-text").textContent =
-    `Diente ${num} — ${LABELS[nuevo]}`;
-  info.style.display = "flex";
-  dienteSel = num;
-}
-
-function cerrarInfo() {
-  document.getElementById("odonto-info").style.display = "none";
-}
-
-async function guardarOdontograma() {
-  const btn = document.getElementById("btnGuardarOdonto");
-  btn.textContent = "Guardando…";
-  btn.disabled = true;
-  try {
-    await fetch(`/api/odontograma/${PACIENTE_ID}`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(estadoDientes),
-    });
-    btn.textContent = "✓ Guardado";
-    btn.style.background = "var(--success)";
-    setTimeout(() => {
-      btn.textContent = "Guardar";
-      btn.style.background = "";
-      btn.disabled = false;
-    }, 2000);
-  } catch(e) {
-    btn.textContent = "Error";
-    btn.disabled = false;
-  }
-}
-
-// Leyenda: click para entender colores
-document.querySelectorAll(".odonto-estado-pill").forEach(pill => {
-  const est = pill.dataset.estado;
+// Leyenda
+const leyendaCont = document.getElementById("odonto-leyenda");
+ESTADOS.forEach(est => {
   const col = COLORES[est];
-  pill.style.background = col.bg;
-  pill.style.borderColor = col.border;
-  pill.style.color = col.text;
+  const span = document.createElement("span");
+  span.className = "odonto-estado-pill";
+  span.textContent = LABELS[est];
+  span.style.cssText = `background:${col.bg};border-color:${col.border};color:${col.text}`;
+  leyendaCont.appendChild(span);
 });
 
-// Cargar odontograma guardado
 fetch(`/api/odontograma/${PACIENTE_ID}`)
-  .then(r => r.json())
+  .then(r=>r.json())
   .then(data => {
     estadoDientes = data || {};
-    renderFila(SUPERIOR, "row-superior");
-    renderFila(INFERIOR, "row-inferior");
+    renderFila(ADULTO_SUP, "row-adulto-sup");
+    renderFila(ADULTO_INF, "row-adulto-inf");
+    renderFila(PED_SUP,    "row-ped-sup");
+    renderFila(PED_INF,    "row-ped-inf");
   });
+
+// ── Historia médica ───────────────────────────────────────────
+fetch(`/api/historial_medico/${PACIENTE_ID}`)
+  .then(r=>r.json())
+  .then(h => {
+    ["enf_cardiaca","enf_circulatoria","enf_respiratoria","enf_hormonal",
+     "enf_digestiva","enf_infecciosa","enf_renal"].forEach(k => {
+      const el = document.getElementById(k);
+      if(el) el.checked = h[k];
+    });
+    document.getElementById("enf_otras").value = h.enf_otras || "";
+    document.getElementById("observaciones").value = h.observaciones || "";
+    ["toma_medicacion","alergico_medicacion","operado","hemorragias","embarazada","fuma"].forEach(k => {
+      const val = h[k] ? "si" : "no";
+      const radio = document.querySelector(`input[name="${k}"][value="${val}"]`);
+      if(radio) radio.checked = true;
+    });
+  });
+
+// ── Guardar ficha ─────────────────────────────────────────────
+async function guardarFicha() {
+  const btn = document.getElementById("btnGuardarFicha");
+  btn.textContent = "Guardando…"; btn.disabled = true;
+
+  const sinoVal = k => document.querySelector(`input[name="${k}"]:checked`)?.value === "si";
+
+  const historial = {
+    enf_cardiaca:        document.getElementById("enf_cardiaca").checked,
+    enf_circulatoria:    document.getElementById("enf_circulatoria").checked,
+    enf_respiratoria:    document.getElementById("enf_respiratoria").checked,
+    enf_hormonal:        document.getElementById("enf_hormonal").checked,
+    enf_digestiva:       document.getElementById("enf_digestiva").checked,
+    enf_infecciosa:      document.getElementById("enf_infecciosa").checked,
+    enf_renal:           document.getElementById("enf_renal").checked,
+    enf_otras:           document.getElementById("enf_otras").value,
+    toma_medicacion:     sinoVal("toma_medicacion"),
+    alergico_medicacion: sinoVal("alergico_medicacion"),
+    operado:             sinoVal("operado"),
+    hemorragias:         sinoVal("hemorragias"),
+    embarazada:          sinoVal("embarazada"),
+    fuma:                sinoVal("fuma"),
+    observaciones:       document.getElementById("observaciones").value,
+  };
+
+  await Promise.all([
+    fetch(`/api/odontograma/${PACIENTE_ID}`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(estadoDientes),
+    }),
+    fetch(`/api/historial_medico/${PACIENTE_ID}`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(historial),
+    }),
+  ]);
+
+  btn.textContent = "✓ Guardado";
+  btn.style.background = "#059669";
+  setTimeout(() => {
+    btn.textContent = "Guardar ficha";
+    btn.style.background = "";
+    btn.disabled = false;
+  }, 2000);
+}
+
+// ── Firma canvas ──────────────────────────────────────────────
+const canvas = document.getElementById("firmaCanvas");
+const ctx    = canvas.getContext("2d");
+canvas.width  = canvas.offsetWidth  || 300;
+canvas.height = 100;
+ctx.strokeStyle = "#0F172A";
+ctx.lineWidth   = 2;
+ctx.lineCap     = "round";
+
+let drawing = false;
+canvas.addEventListener("mousedown",  e => { drawing=true; ctx.beginPath(); ctx.moveTo(...pos(e,canvas)); });
+canvas.addEventListener("mousemove",  e => { if(!drawing) return; ctx.lineTo(...pos(e,canvas)); ctx.stroke(); });
+canvas.addEventListener("mouseup",    () => drawing=false);
+canvas.addEventListener("mouseleave", () => drawing=false);
+canvas.addEventListener("touchstart", e => { e.preventDefault(); drawing=true; ctx.beginPath(); ctx.moveTo(...pos(e.touches[0],canvas)); }, {passive:false});
+canvas.addEventListener("touchmove",  e => { e.preventDefault(); if(!drawing) return; ctx.lineTo(...pos(e.touches[0],canvas)); ctx.stroke(); }, {passive:false});
+canvas.addEventListener("touchend",   () => drawing=false);
+
+function pos(e, el) {
+  const r = el.getBoundingClientRect();
+  return [e.clientX - r.left, e.clientY - r.top];
+}
+function limpiarFirma() { ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+window.addEventListener("resize", () => {
+  const img = canvas.toDataURL();
+  canvas.width = canvas.offsetWidth || 300;
+  const i = new Image(); i.onload = () => ctx.drawImage(i,0,0); i.src = img;
+});
 </script>
 {% endblock %}

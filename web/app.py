@@ -107,6 +107,44 @@ def api_guardar_odontograma(id):
     db.guardar_odontograma(id, datos)
     return jsonify({"ok": True})
 
+@app.route("/api/historial_medico/<int:id>")
+def api_get_historial_medico(id):
+    h = db.obtener_historial(id)
+    return jsonify({
+        "enf_cardiaca": h.enf_cardiaca, "enf_circulatoria": h.enf_circulatoria,
+        "enf_respiratoria": h.enf_respiratoria, "enf_hormonal": h.enf_hormonal,
+        "enf_digestiva": h.enf_digestiva, "enf_infecciosa": h.enf_infecciosa,
+        "enf_renal": h.enf_renal, "enf_otras": h.enf_otras or "",
+        "toma_medicacion": h.toma_medicacion, "alergico_medicacion": h.alergico_medicacion,
+        "operado": h.operado, "hemorragias": h.hemorragias,
+        "embarazada": h.embarazada, "fuma": h.fuma,
+        "observaciones": h.observaciones or "",
+    })
+
+@app.route("/api/historial_medico/<int:id>", methods=["POST"])
+def api_guardar_historial_medico(id):
+    data = request.get_json(force=True)
+    h = db.HistorialMedico(
+        paciente_id=id,
+        enf_cardiaca=bool(data.get("enf_cardiaca")),
+        enf_circulatoria=bool(data.get("enf_circulatoria")),
+        enf_respiratoria=bool(data.get("enf_respiratoria")),
+        enf_hormonal=bool(data.get("enf_hormonal")),
+        enf_digestiva=bool(data.get("enf_digestiva")),
+        enf_infecciosa=bool(data.get("enf_infecciosa")),
+        enf_renal=bool(data.get("enf_renal")),
+        enf_otras=data.get("enf_otras") or None,
+        toma_medicacion=bool(data.get("toma_medicacion")),
+        alergico_medicacion=bool(data.get("alergico_medicacion")),
+        operado=bool(data.get("operado")),
+        hemorragias=bool(data.get("hemorragias")),
+        embarazada=bool(data.get("embarazada")),
+        fuma=bool(data.get("fuma")),
+        observaciones=data.get("observaciones") or None,
+    )
+    db.guardar_historial(h)
+    return jsonify({"ok": True})
+
 @app.route("/calendario")
 def calendario():
     return render_template("calendario.html")

@@ -1169,3 +1169,60 @@ svg { width: 20px; height: 20px; flex-shrink: 0; }
   .diente-num { font-size: 8px; }
   .diente-sym { font-size: 11px; }
 }
+
+/* ── Ficha clínica completa ──────────────────────────── */
+.ficha-section-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .06em;
+  margin-bottom: 8px;
+}
+.ficha-section-bar {
+  width: 3px; height: 16px; border-radius: 2px;
+  background: var(--primary); display: inline-block; flex-shrink: 0;
+}
+
+/* Enfermedades */
+.enf-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.enf-check {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: var(--text); cursor: pointer;
+}
+.enf-check input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+/* Preguntas sí/no */
+.sino-list { display: flex; flex-direction: column; gap: 0; }
+.sino-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.sino-row:last-child { border-bottom: none; }
+.sino-label { font-size: 14px; color: var(--text); flex: 1; }
+.sino-opts  { display: flex; gap: 16px; flex-shrink: 0; }
+.sino-opts label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+.sino-opts input { width: 16px; height: 16px; accent-color: var(--primary); }
+
+/* Consentimiento */
+.consentimiento-card { }
+.consentimiento-texto {
+  font-size: 13px; color: var(--text-muted); line-height: 1.7;
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; background: var(--bg); margin-bottom: 16px;
+}
+.firma-row { display: flex; gap: 20px; flex-wrap: wrap; }
+.firma-field { flex: 1; min-width: 200px; }
+.firma-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.firma-canvas {
+  width: 100%; height: 100px; border: 1.5px solid var(--border);
+  border-radius: 8px; background: #fff; display: block; cursor: crosshair;
+  touch-action: none;
+}
+
+/* Odontograma mejorado */
+.odonto-card { padding: 16px; }
+.odonto-jaw-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin: 4px 0 6px; }
+.odonto-divider { height: 1px; background: var(--border); margin: 16px 0; }
