@@ -3,4 +3,4 @@ services:
     name: clinica-dental
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --chdir web app:app --bind 0.0.0.0:$PORT --workers 1 --threads 2
+    startCommand: gunicorn --chdir web app:app --bind 0.0.0.0:$PORT
