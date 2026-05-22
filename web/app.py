@@ -11,9 +11,9 @@ from functools import wraps
 db.init_db()
 
 app = Flask(__name__)
-app.secret_key = "guirlanda-dental-2024-xk92"
+app.secret_key = "ghirlanda-dental-2024-xk92"
 
-USUARIO = "Richard guirlanda"
+USUARIO = "Richard ghirlanda"
 CONTRASENA = "appdental"
 
 def login_required(f):
