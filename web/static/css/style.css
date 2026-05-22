@@ -1304,6 +1304,7 @@ svg { width: 20px; height: 20px; flex-shrink: 0; }
 }
 .trat-input:focus { border-color: var(--primary); background: #fff; }
 .trat-input-num { text-align: right; }
+.trat-textarea { resize: vertical; min-height: 60px; line-height: 1.4; font-family: inherit; }
 
 .trat-saldo { font-weight: 700; color: var(--success); padding-right: 10px; }
 .trat-saldo-pend { color: var(--danger); }

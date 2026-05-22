@@ -230,27 +230,6 @@
       </div>
     </section>
 
-    <!-- Observaciones (con fechas, estilo formulario físico) -->
-    <section class="ficha-section">
-      <div class="ficha-section-title"><span class="ficha-section-bar"></span>Observaciones</div>
-      <div class="obs-table-wrap card">
-        <table class="obs-table" id="obs-table">
-          <thead>
-            <tr>
-              <th class="obs-th obs-col-fecha">Fecha</th>
-              <th class="obs-th obs-col-text">Observación</th>
-              <th class="obs-th obs-col-del"></th>
-            </tr>
-          </thead>
-          <tbody id="obs-tbody">
-            <tr><td colspan="3" class="trat-loading">Cargando…</td></tr>
-          </tbody>
-        </table>
-        <div class="trat-add-row">
-          <button class="btn btn-secondary btn-sm" onclick="agregarObsRow()">+ Nueva observación</button>
-        </div>
-      </div>
-    </section>
   </div>
 
 </div>
@@ -523,7 +502,7 @@ function renderTrat() {
     const saldo = (Number(p.total||0) - Number(p.pagado||0)).toFixed(2);
     return `<tr class="trat-row" data-i="${i}">
       <td class="trat-td trat-col-fecha"><input class="trat-input" type="date" value="${p.fecha||''}" onchange="updatePago(${i},'fecha',this.value)"></td>
-      <td class="trat-td trat-col-trat"><input class="trat-input" type="text" value="${escHtml(p.tratamiento||'')}" placeholder="Descripción…" onchange="updatePago(${i},'tratamiento',this.value)"></td>
+      <td class="trat-td trat-col-trat"><textarea class="trat-input trat-textarea" rows="3" placeholder="Descripción…" onchange="updatePago(${i},'tratamiento',this.value)">${escHtml(p.tratamiento||'')}</textarea></td>
       <td class="trat-td trat-col-num"><input class="trat-input trat-input-num" type="number" min="0" step="0.01" value="${fmt(p.total)}" onchange="updatePago(${i},'total',this.value)"></td>
       <td class="trat-td trat-col-num"><input class="trat-input trat-input-num" type="number" min="0" step="0.01" value="${fmt(p.pagado)}" onchange="updatePago(${i},'pagado',this.value)"></td>
       <td class="trat-td trat-col-num trat-saldo ${Number(saldo)>0?'trat-saldo-pend':''}">${saldo}</td>
