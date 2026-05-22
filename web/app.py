@@ -5,12 +5,44 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import db
-from flask import Flask, render_template, redirect, url_for, request, jsonify, abort
+from flask import Flask, render_template, redirect, url_for, request, jsonify, abort, session
+from functools import wraps
 
 db.init_db()
 
 app = Flask(__name__)
-app.secret_key = "dental-clinic-secret-key-2024"
+app.secret_key = "guirlanda-dental-2024-xk92"
+
+USUARIO = "Richard guirlanda"
+CONTRASENA = "appdental"
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ──────────────────────────────────────────────
+# Login
+# ──────────────────────────────────────────────
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        if request.form["usuario"] == USUARIO and request.form["contrasena"] == CONTRASENA:
+            session["logged_in"] = True
+            return redirect(url_for("pacientes"))
+        error = "Usuario o contraseña incorrectos"
+    return render_template("login.html", error=error)
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 
 
 # ──────────────────────────────────────────────
@@ -18,11 +50,13 @@ app.secret_key = "dental-clinic-secret-key-2024"
 # ──────────────────────────────────────────────
 
 @app.route("/")
+@login_required
 def index():
     return redirect(url_for("pacientes"))
 
 
 @app.route("/pacientes")
+@login_required
 def pacientes():
     q = request.args.get("q", "").strip()
     if q:
@@ -34,6 +68,7 @@ def pacientes():
 
 
 @app.route("/pacientes/nuevo", methods=["GET", "POST"])
+@login_required
 def nuevo_paciente():
     if request.method == "POST":
         p = db.Paciente(
@@ -49,6 +84,7 @@ def nuevo_paciente():
 
 
 @app.route("/pacientes/<int:id>")
+@login_required
 def ver_paciente(id):
     paciente = db.obtener_paciente(id)
     if not paciente:
@@ -58,6 +94,7 @@ def ver_paciente(id):
 
 
 @app.route("/pacientes/<int:id>/editar", methods=["GET", "POST"])
+@login_required
 def editar_paciente(id):
     paciente = db.obtener_paciente(id)
     if not paciente:
@@ -74,6 +111,7 @@ def editar_paciente(id):
 
 
 @app.route("/pacientes/<int:id>/ficha", methods=["GET", "POST"])
+@login_required
 def ficha_clinica(id):
     paciente = db.obtener_paciente(id)
     if not paciente:
@@ -97,17 +135,20 @@ def ficha_clinica(id):
 
 
 @app.route("/api/odontograma/<int:id>")
+@login_required
 def api_get_odontograma(id):
     datos = db.obtener_odontograma(id)
     return jsonify(datos)
 
 @app.route("/api/odontograma/<int:id>", methods=["POST"])
+@login_required
 def api_guardar_odontograma(id):
     datos = request.get_json(force=True)
     db.guardar_odontograma(id, datos)
     return jsonify({"ok": True})
 
 @app.route("/api/historial_medico/<int:id>")
+@login_required
 def api_get_historial_medico(id):
     h = db.obtener_historial(id)
     return jsonify({
@@ -122,6 +163,7 @@ def api_get_historial_medico(id):
     })
 
 @app.route("/api/historial_medico/<int:id>", methods=["POST"])
+@login_required
 def api_guardar_historial_medico(id):
     data = request.get_json(force=True)
     h = db.HistorialMedico(
@@ -145,7 +187,45 @@ def api_guardar_historial_medico(id):
     db.guardar_historial(h)
     return jsonify({"ok": True})
 
+@app.route("/api/pagos/<int:id>")
+@login_required
+def api_listar_pagos(id):
+    pagos = db.listar_pagos(id)
+    return jsonify([{"id":p.id,"fecha":p.fecha,"tratamiento":p.tratamiento,
+                     "total":p.total,"pagado":p.pagado,"saldo":p.saldo} for p in pagos])
+
+@app.route("/api/pagos/<int:id>", methods=["POST"])
+@login_required
+def api_crear_pago(id):
+    from datetime import date
+    p = db.crear_pago(db.Pago(paciente_id=id, fecha=str(date.today()),
+                               tratamiento="", total=0, pagado=0))
+    return jsonify({"id":p.id,"fecha":p.fecha,"tratamiento":p.tratamiento,
+                    "total":p.total,"pagado":p.pagado,"saldo":p.saldo}), 201
+
+@app.route("/api/pagos/fila/<int:pago_id>", methods=["PUT"])
+@login_required
+def api_actualizar_pago(pago_id):
+    data = request.get_json(force=True)
+    pagos = db.listar_pagos(int(data.get("paciente_id", 0)))
+    pago = next((p for p in pagos if p.id == pago_id), None)
+    if not pago:
+        abort(404)
+    pago.fecha = data.get("fecha", pago.fecha)
+    pago.tratamiento = data.get("tratamiento", pago.tratamiento)
+    pago.total = float(data.get("total", pago.total) or 0)
+    pago.pagado = float(data.get("pagado", pago.pagado) or 0)
+    db.actualizar_pago(pago)
+    return jsonify({"ok": True, "saldo": pago.saldo})
+
+@app.route("/api/pagos/fila/<int:pago_id>", methods=["DELETE"])
+@login_required
+def api_eliminar_pago(pago_id):
+    db.eliminar_pago(pago_id)
+    return jsonify({"ok": True})
+
 @app.route("/calendario")
+@login_required
 def calendario():
     return render_template("calendario.html")
 
@@ -155,6 +235,7 @@ def calendario():
 # ──────────────────────────────────────────────
 
 @app.route("/api/citas_semana")
+@login_required
 def api_citas_semana():
     from datetime import date, timedelta
     fecha_str = request.args.get("fecha")
@@ -177,6 +258,7 @@ def api_citas_semana():
 
 
 @app.route("/api/citas_mes")
+@login_required
 def api_citas_mes():
     from datetime import date
     year = int(request.args.get("year", date.today().year))
@@ -193,6 +275,7 @@ def api_citas_mes():
 
 
 @app.route("/api/citas", methods=["POST"])
+@login_required
 def api_crear_cita():
     data = request.get_json(force=True)
     cita = db.Cita(
@@ -206,6 +289,7 @@ def api_crear_cita():
 
 
 @app.route("/api/citas/<int:id>", methods=["PUT"])
+@login_required
 def api_actualizar_cita(id):
     data = request.get_json(force=True)
     cita = db.Cita(
@@ -220,12 +304,14 @@ def api_actualizar_cita(id):
 
 
 @app.route("/api/citas/<int:id>", methods=["DELETE"])
+@login_required
 def api_eliminar_cita(id):
     db.eliminar_cita(id)
     return jsonify({"ok": True})
 
 
 @app.route("/api/pacientes")
+@login_required
 def api_pacientes():
     pacientes = db.listar_pacientes()
     return jsonify([{

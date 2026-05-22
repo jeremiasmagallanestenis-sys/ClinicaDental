@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clínica Guirlanda — Acceso</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    body { background: var(--bg, #F4F6FB); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: system-ui, sans-serif; }
+    .login-card { background: #fff; border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,.08); padding: 40px 32px; width: 100%; max-width: 360px; }
+    .login-logo { text-align: center; margin-bottom: 28px; }
+    .login-logo h1 { font-size: 22px; font-weight: 800; color: #0F172A; margin: 0; }
+    .login-logo p { color: #64748B; font-size: 13px; margin: 4px 0 0; }
+    .login-field { margin-bottom: 16px; }
+    .login-field label { display: block; font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+    .login-field input { width: 100%; padding: 11px 14px; border: 1.5px solid #E2E8F0; border-radius: 10px; font-size: 15px; color: #0F172A; box-sizing: border-box; outline: none; transition: border-color .15s; }
+    .login-field input:focus { border-color: #4F46E5; }
+    .login-btn { width: 100%; padding: 13px; background: #4F46E5; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: background .15s; }
+    .login-btn:hover { background: #4338CA; }
+    .login-error { background: #FEE2E2; color: #991B1B; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo">
+      <h1>🦷 Clínica Guirlanda</h1>
+      <p>Sistema de gestión odontológica</p>
+    </div>
+    {% if error %}
+    <div class="login-error">{{ error }}</div>
+    {% endif %}
+    <form method="POST">
+      <div class="login-field">
+        <label>Usuario</label>
+        <input type="text" name="usuario" placeholder="Ingresá tu usuario" autofocus required />
+      </div>
+      <div class="login-field">
+        <label>Contraseña</label>
+        <input type="password" name="contrasena" placeholder="Ingresá tu contraseña" required />
+      </div>
+      <button type="submit" class="login-btn">Ingresar</button>
+    </form>
+  </div>
+</body>
+</html>
